@@ -72,7 +72,7 @@ npx expo start
 
 #### 🟢 Cách 1: Dùng Arduino Uno / Nano (Cắm cáp USB vào máy tính)
 Nếu nhóm bạn dùng mạch **Arduino Uno** thông thường (không có WiFi):
-1. **Nạp code vào Arduino**: Mở Arduino IDE và nạp file [hardware/Arduino_Uno_Sensors.ino](file:///d:/LTDD_nhóm%203/hardware/Arduino_Uno_Sensors.ino).
+1. **Nạp code vào Arduino**: Mở Arduino IDE và nạp file [hardware/Arduino_Uno_Sensors/Arduino_Uno_Sensors.ino](file:///d:/LTDD_nhóm%203/hardware/Arduino_Uno_Sensors/Arduino_Uno_Sensors.ino).
    - Nước: Chân A0
    - Âm thanh: Chân A1
    - DHT11: Chân Digital 2
