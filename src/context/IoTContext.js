@@ -87,19 +87,28 @@ export const IoTProvider = ({ children }) => {
     loadData();
   }, []);
 
-  // Lưu trạng thái cảm biến vào bộ nhớ
+  // Lưu trạng thái cảm biến vào bộ nhớ (Debounce 2000ms để tránh ghi đĩa liên tục gây lag giao diện)
   useEffect(() => {
-    StorageService.saveSensors(sensors);
+    const timer = setTimeout(() => {
+      StorageService.saveSensors(sensors);
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [sensors]);
 
-  // Lưu trạng thái cổng vào bộ nhớ
+  // Lưu trạng thái cổng vào bộ nhớ (Debounce 1000ms)
   useEffect(() => {
-    StorageService.saveGateState(gateState);
+    const timer = setTimeout(() => {
+      StorageService.saveGateState(gateState);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [gateState]);
 
-  // Lưu lịch sử thông báo vào bộ nhớ
+  // Lưu lịch sử thông báo vào bộ nhớ (Debounce 1500ms)
   useEffect(() => {
-    StorageService.saveAlerts(alerts);
+    const timer = setTimeout(() => {
+      StorageService.saveAlerts(alerts);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [alerts]);
 
   // Vòng lặp mô phỏng sinh dữ liệu khi bật chế độ Simulation
@@ -121,7 +130,7 @@ export const IoTProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isSimulating]);
 
-  // Vòng lặp cập nhật dữ liệu phần cứng: Ưu tiên Firebase Cloud (ltdd-945a5) và Local HTTP (LAN)
+  // Vòng lặp cập nhật dữ liệu phần cứng: Tối ưu mượt mà không lag với Firebase Cloud & LAN HTTP
   useEffect(() => {
     if (isSimulating) {
       setIsHardwareConnected(false);
@@ -164,7 +173,7 @@ export const IoTProvider = ({ children }) => {
         if (!data && fbUrl) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
             const response = await fetch(`${fbUrl}/smart_home/telemetry.json`, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (response.ok) {
@@ -172,6 +181,24 @@ export const IoTProvider = ({ children }) => {
               if (fbData && typeof fbData === 'object' && (fbData.temp !== undefined || fbData.gate !== undefined || fbData.rfid !== undefined)) {
                 data = fbData;
                 activeSource = 'Firebase Cloud';
+              }
+            }
+
+            // Dự phòng: Nếu node /smart_home/telemetry chưa có, đọc thử /smart_home.json
+            if (!data) {
+              const c2 = new AbortController();
+              const t2 = setTimeout(() => c2.abort(), 2000);
+              const r2 = await fetch(`${fbUrl}/smart_home.json`, { signal: c2.signal });
+              clearTimeout(t2);
+              if (r2.ok) {
+                const rootData = await r2.json();
+                if (rootData && typeof rootData === 'object') {
+                  const candidate = rootData.telemetry || rootData;
+                  if (candidate && (candidate.temp !== undefined || candidate.gate !== undefined)) {
+                    data = candidate;
+                    activeSource = 'Firebase Cloud';
+                  }
+                }
               }
             }
           } catch (err) {}
@@ -182,66 +209,76 @@ export const IoTProvider = ({ children }) => {
           if (activeSource) setConnectionSource(activeSource);
           if (data.light !== undefined) setIsLightOn(Boolean(data.light));
 
-        // Cập nhật thông tin thẻ RFID vừa quẹt
-        if (data.rfid && String(data.rfid).trim().length > 0) {
-          setRfidInfo(prev => {
-            const cleanUid = String(data.rfid).toUpperCase().trim();
-            if (prev.lastUid !== cleanUid) {
-              const isValid = cleanUid === '620F0307' || cleanUid === '239A6C06' || cleanUid === (data.master || '').toUpperCase();
-              return {
-                lastUid: cleanUid,
-                masterUid: data.master || '620F0307',
-                lastScanTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                isValid,
-              };
-            }
-            return prev;
+          // Cập nhật thông tin thẻ RFID vừa quẹt
+          if (data.rfid && String(data.rfid).trim().length > 0) {
+            setRfidInfo(prev => {
+              const cleanUid = String(data.rfid).toUpperCase().trim();
+              if (prev.lastUid !== cleanUid) {
+                const isValid = cleanUid === '620F0307' || cleanUid === '239A6C06' || cleanUid === (data.master || '').toUpperCase();
+                return {
+                  lastUid: cleanUid,
+                  masterUid: data.master || '620F0307',
+                  lastScanTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                  isValid,
+                };
+              }
+              return prev;
+            });
+          }
+
+          // Cập nhật giá trị đo thực tế cho các cảm biến phần cứng (Nhiệt độ & Độ ẩm DHT11)
+          // Áp dụng thuật toán so sánh (Diffing) để CHỈ render khi có thay đổi thật sự -> Khắc phục triệt để giật lag
+          setSensors(prevSensors => {
+            let hasChanged = false;
+            const nextSensors = prevSensors.map(s => {
+              let val = s.value;
+              let status = s.status;
+
+              if (s.type === SENSOR_TYPES.TEMPERATURE && data.temp !== undefined) {
+                val = Number(data.temp);
+                status = val >= s.dangerThreshold ? 'Quá nhiệt!' : val >= s.warningThreshold ? 'Hơi nóng' : 'Mát mẻ';
+              } else if (s.type === SENSOR_TYPES.HUMIDITY && data.hum !== undefined) {
+                val = Number(data.hum);
+                status = val >= s.dangerThreshold ? 'Quá ẩm' : val >= s.warningThreshold ? 'Khá ẩm' : 'Thoải mái';
+              }
+
+              // Chỉ cập nhật object khi giá trị hoặc trạng thái thực sự thay đổi
+              if (val !== s.value || status !== s.status) {
+                hasChanged = true;
+                const currentHistory = s.history || [];
+                const updatedHistory = [...currentHistory.slice(-9), val];
+
+                const updatedSensor = {
+                  ...s,
+                  value: val,
+                  status,
+                  history: updatedHistory,
+                };
+
+                if (val >= s.dangerThreshold) {
+                  checkAndPushAlert(updatedSensor, 'danger');
+                }
+
+                return updatedSensor;
+              }
+              return s;
+            });
+
+            // Nếu không có thay đổi, trả về nguyên con trỏ mảng cũ để React không tốn CPU render lại
+            return hasChanged ? nextSensors : prevSensors;
           });
+
+          // Đồng bộ trạng thái cổng đóng/mở từ ESP32 / Firebase
+          if (data.gate !== undefined) {
+            setGateState(prev => (prev.isOpen !== Boolean(data.gate) ? { ...prev, isOpen: Boolean(data.gate) } : prev));
+          }
+        } else {
+          setIsHardwareConnected(false);
         }
-
-        // Cập nhật giá trị đo thực tế cho các cảm biến phần cứng (Nhiệt độ & Độ ẩm DHT11)
-        setSensors(prevSensors => {
-          return prevSensors.map(s => {
-            let val = s.value;
-            let status = s.status;
-
-            if (s.type === SENSOR_TYPES.TEMPERATURE && data.temp !== undefined) {
-              val = Number(data.temp);
-              status = val >= s.dangerThreshold ? 'Quá nhiệt!' : val >= s.warningThreshold ? 'Hơi nóng' : 'Mát mẻ';
-            } else if (s.type === SENSOR_TYPES.HUMIDITY && data.hum !== undefined) {
-              val = Number(data.hum);
-              status = val >= s.dangerThreshold ? 'Quá ẩm' : val >= s.warningThreshold ? 'Khá ẩm' : 'Thoải mái';
-            }
-
-            const currentHistory = s.history || [];
-            const updatedHistory = [...currentHistory.slice(-9), val];
-
-            const updatedSensor = {
-              ...s,
-              value: val,
-              status,
-              history: updatedHistory,
-            };
-
-            if (val >= s.dangerThreshold) {
-              checkAndPushAlert(updatedSensor, 'danger');
-            }
-
-            return updatedSensor;
-          });
-        });
-
-        // Đồng bộ trạng thái cổng đóng/mở từ ESP32 / Firebase
-        if (data.gate !== undefined) {
-          setGateState(prev => (prev.isOpen !== Boolean(data.gate) ? { ...prev, isOpen: Boolean(data.gate) } : prev));
-        }
-      } else {
-        setIsHardwareConnected(false);
+      } finally {
+        isFetching = false;
       }
-    } finally {
-      isFetching = false;
-    }
-  }, 1200);
+    }, 1200);
 
     return () => clearInterval(interval);
   }, [isSimulating, networkConfig.hardwareServerUrl, networkConfig.firebaseUrl, networkConfig.useFirebase]);
@@ -328,23 +365,28 @@ export const IoTProvider = ({ children }) => {
     if (willBeOpen && gateState.mode === 'Auto-Close' && gateState.autoCloseDelaySec > 0) {
       if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
       autoCloseTimerRef.current = setTimeout(() => {
-        try {
-          let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
-          if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-            targetUrl = 'http://localhost:5000';
-          } else {
-            targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
-          }
-          fetch(`${targetUrl}/api/gate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              open: false,
-              action: 'CLOSE',
-              method: `Tự động đóng (${gateState.autoCloseDelaySec}s)`,
-            }),
-          }).catch(err => console.log('Auto close hardware send error:', err));
-        } catch (e) {}
+        const isHttpsEnv = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+
+        // Gửi lệnh đóng cổng qua LAN nếu không phải HTTPS Web
+        if (!isHttpsEnv) {
+          try {
+            let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+            if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+              targetUrl = 'http://localhost:5000';
+            } else {
+              targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
+            }
+            fetch(`${targetUrl}/api/gate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                open: false,
+                action: 'CLOSE',
+                method: `Tự động đóng (${gateState.autoCloseDelaySec}s)`,
+              }),
+            }).catch(err => console.log('Auto close hardware send error:', err));
+          } catch (e) {}
+        }
 
         // Gửi lệnh đóng cổng lên Firebase Cloud
         try {
@@ -409,7 +451,8 @@ export const IoTProvider = ({ children }) => {
     } catch (e) {}
 
     // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
-    if (!isHttps) {
+    const isHttpsWebContext = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+    if (!isHttpsWebContext) {
       try {
         let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
         if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
