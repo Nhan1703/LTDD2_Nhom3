@@ -1,17 +1,16 @@
 export const SENSOR_TYPES = {
-  WATER: 'water',
-  SOUND: 'sound',
   TEMPERATURE: 'temperature',
   HUMIDITY: 'humidity',
   GATE: 'gate',
-  GAS: 'gas',
   LIGHT: 'light',
+  GAS: 'gas',
   MOTION: 'motion',
   SOIL: 'soil',
   SMOKE: 'smoke',
   CUSTOM: 'custom',
 };
 
+// Cấu hình mẫu mở rộng thêm cảm biến trong tương lai nếu gắn thêm vào ESP32
 export const SENSOR_PRESETS = [
   {
     type: SENSOR_TYPES.GAS,
@@ -50,30 +49,6 @@ export const SENSOR_PRESETS = [
     description: 'Phát hiện người di chuyển trong vùng quét',
   },
   {
-    type: SENSOR_TYPES.SOIL,
-    name: 'Cảm biến Độ ẩm đất',
-    unit: '%',
-    min: 0,
-    max: 100,
-    warningThreshold: 30,
-    dangerThreshold: 15,
-    icon: 'leaf',
-    color: '#84CC16',
-    description: 'Đo độ ẩm đất trồng cây, tưới tự động',
-  },
-  {
-    type: SENSOR_TYPES.SMOKE,
-    name: 'Cảm biến Báo khói / Lửa',
-    unit: 'ppm',
-    min: 0,
-    max: 500,
-    warningThreshold: 150,
-    dangerThreshold: 300,
-    icon: 'bonfire',
-    color: '#DC2626',
-    description: 'Cảnh báo cháy nổ sớm',
-  },
-  {
     type: SENSOR_TYPES.CUSTOM,
     name: 'Cảm biến Tùy chọn',
     unit: 'đơn vị',
@@ -87,49 +62,17 @@ export const SENSOR_PRESETS = [
   },
 ];
 
+// Danh sách các cảm biến THỰC TẾ đang kết nối vật lý với bo mạch ESP32
+// Chỉ bao gồm: Nhiệt độ DHT11 & Độ ẩm không khí DHT11
+// (Đã loại bỏ cảm biến Nước và cảm biến Âm thanh vì không cắm phần cứng)
 export const INITIAL_SENSORS = [
-  {
-    id: 'sensor_water',
-    type: SENSOR_TYPES.WATER,
-    name: 'Cảm biến Nước & Rò rỉ',
-    location: 'Khu vực bếp / Sân thượng',
-    unit: '%',
-    value: 0, // 0 = Khô ráo, >0 = Có nước
-    isDetected: false,
-    min: 0,
-    max: 100,
-    warningThreshold: 20,
-    dangerThreshold: 40,
-    icon: 'water',
-    color: '#0284C7',
-    status: 'Bình thường', // Bình thường | Cảnh báo ẩm | Báo động ngập
-    history: [0, 0, 0, 5, 0, 0, 0, 0],
-    isCustom: false,
-  },
-  {
-    id: 'sensor_sound',
-    type: SENSOR_TYPES.SOUND,
-    name: 'Cảm biến Âm thanh & Tiếng ồn',
-    location: 'Phòng khách / Hành lang',
-    unit: 'dB',
-    value: 48,
-    min: 20,
-    max: 120,
-    warningThreshold: 70,
-    dangerThreshold: 85,
-    icon: 'volume-high',
-    color: '#F59E0B',
-    status: 'Yên tĩnh', // Yên tĩnh | Bình thường | Ồn ào | Báo động
-    history: [42, 45, 52, 48, 55, 62, 50, 48],
-    isCustom: false,
-  },
   {
     id: 'sensor_temp',
     type: SENSOR_TYPES.TEMPERATURE,
     name: 'Nhiệt độ Môi trường',
-    location: 'Phòng khách (DHT11/22)',
+    location: 'Phòng khách (DHT11)',
     unit: '°C',
-    value: 28.5,
+    value: 26.2,
     min: 0,
     max: 60,
     warningThreshold: 34,
@@ -137,28 +80,29 @@ export const INITIAL_SENSORS = [
     icon: 'thermometer',
     color: '#EF4444',
     status: 'Mát mẻ',
-    history: [27.0, 27.4, 28.1, 28.5, 29.0, 28.8, 28.5, 28.5],
+    history: [26.0, 26.1, 26.2, 26.2, 26.3, 26.2, 26.2, 26.2],
     isCustom: false,
   },
   {
     id: 'sensor_humidity',
     type: SENSOR_TYPES.HUMIDITY,
     name: 'Độ ẩm Không khí',
-    location: 'Phòng khách (DHT11/22)',
+    location: 'Phòng khách (DHT11)',
     unit: '%',
-    value: 65,
+    value: 87,
     min: 0,
     max: 100,
-    warningThreshold: 80,
-    dangerThreshold: 90,
+    warningThreshold: 90,
+    dangerThreshold: 95,
     icon: 'cloudy',
     color: '#06B6D4',
-    status: 'Thoải mái',
-    history: [60, 62, 65, 68, 66, 64, 65, 65],
+    status: 'Bình thường',
+    history: [85, 86, 86, 87, 87, 88, 87, 87],
     isCustom: false,
   },
 ];
 
+// Trạng thái khởi tạo Cổng ra vào (Servo SG90 & Đầu đọc RFID RC522)
 export const INITIAL_GATE_STATE = {
   isOpen: false, // false = Đóng (Khóa), true = Mở
   lastActionTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
@@ -176,7 +120,7 @@ export const INITIAL_GATE_STATE = {
     {
       id: 'log_2',
       action: 'Mở cổng',
-      method: 'Điều khiển qua App',
+      method: 'Điều khiển qua App / Web',
       time: '08:14:45',
       date: 'Hôm nay',
       status: 'success',

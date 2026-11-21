@@ -86,8 +86,8 @@ Nếu nhóm bạn dùng mạch **Arduino Uno** thông thường (không có WiFi
 
 ---
 
-#### 🔵 Cách 2: Dùng ESP32 / Arduino có WiFi (Kết nối không dây trực tiếp)
-Nếu nhóm bạn dùng mạch **ESP32** (tự kết nối WiFi gửi lên App không cần cắm máy tính):
-1. Mở file [hardware/ESP32_IoT_Nhom3.ino](file:///d:/LTDD_nhóm%203/hardware/ESP32_IoT_Nhom3.ino).
+#### 🔵 Cách 2: Dùng ESP32 có WiFi (Đồng bộ Firebase Cloud & Vercel Web)
+Nếu nhóm dùng mạch **ESP32** (tự kết nối WiFi gửi dữ liệu lên Cloud không cần cắm máy tính):
+1. Mở file [hardware/ESP32_IoT_Nhom3.ino](file:///d:/Nam4/LTDD2/CuoiKy/hardware/ESP32_IoT_Nhom3.ino).
 2. Điền tên WiFi & Mật khẩu vào code và nạp vào ESP32.
-3. ESP32 sẽ tự động gửi dữ liệu cảm biến và nhận lệnh đóng/mở cổng qua MQTT Broker (`broker.emqx.io`).
+3. ESP32 sẽ tự động gửi dữ liệu cảm biến và nhận lệnh đóng/mở cổng qua Firebase Realtime Database và Web Vercel (`https://ltdd2nhom3.vercel.app`).

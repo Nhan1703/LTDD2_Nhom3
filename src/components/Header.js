@@ -5,7 +5,7 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
 export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, onOpenSettings }) {
-  const { isSimulating, setIsSimulating, isHardwareConnected, alerts } = useIoT();
+  const { isSimulating, setIsSimulating, isHardwareConnected, connectionSource, alerts } = useIoT();
   const unreadAlerts = alerts.filter(a => a.type === 'danger' || a.type === 'warning').length;
 
   return (
@@ -17,7 +17,7 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
         </View>
 
         <View style={styles.actionsRow}>
-          {/* Simulation Toggle Badge */}
+          {/* Status Badge */}
           <TouchableOpacity
             style={[
               styles.statusBadge,
@@ -33,7 +33,7 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
               ]}
             />
             <Text style={styles.badgeText}>
-              {isSimulating ? 'Mô phỏng' : (isHardwareConnected ? 'Arduino LIVE' : 'Chờ thiết bị')}
+              {isSimulating ? 'Mô phỏng' : (isHardwareConnected ? (connectionSource || 'ESP32 LIVE') : 'Chờ thiết bị')}
             </Text>
           </TouchableOpacity>
 

@@ -8,6 +8,7 @@ import {
   TextInput,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
@@ -18,30 +19,34 @@ export default function SettingsScreen() {
   const {
     isSimulating,
     setIsSimulating,
-    mqttConfig,
+    networkConfig,
     updateSettings,
     resetToDefaults,
   } = useIoT();
 
-  const [hardwareServerUrl, setHardwareServerUrl] = useState(mqttConfig.hardwareServerUrl || 'http://192.168.1.100:5000');
-  const [brokerUrl, setBrokerUrl] = useState(mqttConfig.brokerUrl || 'broker.emqx.io');
-  const [port, setPort] = useState(mqttConfig.port || '1883');
-  const [topicPrefix, setTopicPrefix] = useState(mqttConfig.topicPrefix || 'smart_home_group3');
-  const [firebaseUrl, setFirebaseUrl] = useState(mqttConfig.firebaseUrl || '');
+  // Cấu hình kết nối trực tiếp ESP32 qua Wi-Fi LAN
+  const [hardwareServerUrl, setHardwareServerUrl] = useState(networkConfig?.hardwareServerUrl || 'http://192.168.1.6:5000');
+  // Cấu hình kết nối đám mây Firebase Realtime Database
+  const [firebaseUrl, setFirebaseUrl] = useState(networkConfig?.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app');
+  const [useFirebase, setUseFirebase] = useState(networkConfig?.useFirebase !== false);
   const [modalVisible, setModalVisible] = useState(false);
   const [showHardwareGuide, setShowHardwareGuide] = useState(false);
 
+  // Lưu thiết lập cấu hình mạng
   const handleSaveSettings = () => {
     updateSettings({
       hardwareServerUrl,
-      brokerUrl,
-      port,
-      topicPrefix,
       firebaseUrl,
+      useFirebase,
     });
-    Alert.alert('Thành công', 'Đã lưu cấu hình kết nối IoT.');
+    if (Platform.OS === 'web') {
+      window.alert('Đã lưu cấu hình kết nối IoT (Firebase Realtime Database & Wi-Fi LAN).');
+    } else {
+      Alert.alert('Thành công', 'Đã lưu cấu hình kết nối IoT (Firebase Realtime Database & Wi-Fi LAN).');
+    }
   };
 
+  // Đặt lại dữ liệu về trạng thái ban đầu
   const handleReset = () => {
     if (Platform.OS === 'web') {
       const ok = typeof window !== 'undefined' ? window.confirm('Thao tác này sẽ đặt lại toàn bộ danh sách cảm biến về mặc định ban đầu. Bạn có chắc không?') : true;
@@ -71,13 +76,13 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header */}
+      {/* Tiêu đề màn hình cài đặt */}
       <View style={styles.header}>
         <Text style={styles.screenSubtitle}>CẤU HÌNH & KẾT NỐI</Text>
         <Text style={styles.screenTitle}>Cài Đặt Hệ Thống</Text>
       </View>
 
-      {/* Simulation Mode Toggle Card */}
+      {/* Thẻ bật/tắt chế độ mô phỏng khi không có phần cứng */}
       <View style={styles.card}>
         <View style={styles.rowBetween}>
           <View style={{ flex: 1, paddingRight: 12 }}>
@@ -95,7 +100,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Sensor Expansion Card */}
+      {/* Thẻ mở rộng thêm cảm biến mới */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Mở Rộng Thêm Cảm Biến</Text>
         <Text style={styles.cardDesc}>
@@ -111,7 +116,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* IoT Hardware Guide (ESP32 / Arduino) */}
+      {/* Hướng dẫn sơ đồ chân GPIO phần cứng ESP32 */}
       <View style={styles.card}>
         <TouchableOpacity
           style={styles.guideHeaderRow}
@@ -119,8 +124,8 @@ export default function SettingsScreen() {
           activeOpacity={0.7}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Sơ đồ nối dây Arduino / ESP32</Text>
-            <Text style={styles.cardDesc}>Hướng dẫn kết nối các chân cảm biến thực tế</Text>
+            <Text style={styles.cardTitle}>Sơ đồ nối dây phần cứng ESP32</Text>
+            <Text style={styles.cardDesc}>Hướng dẫn kết nối các chân cảm biến và cơ cấu chấp hành</Text>
           </View>
           <Ionicons
             name={showHardwareGuide ? 'chevron-up' : 'chevron-down'}
@@ -133,41 +138,85 @@ export default function SettingsScreen() {
           <View style={styles.guideBody}>
             <View style={styles.guideItem}>
               <Text style={styles.pinLabel}>💧 Cảm biến Nước (Water Leak):</Text>
-              <Text style={styles.pinDesc}>Chân Analog A0 nối chân GPIO 34 (ESP32) hoặc A0 (Arduino).</Text>
+              <Text style={styles.pinDesc}>Chân Analog A0 nối chân GPIO 34 (ESP32).</Text>
             </View>
 
             <View style={styles.guideItem}>
               <Text style={styles.pinLabel}>🔊 Cảm biến Âm thanh (Sound):</Text>
-              <Text style={styles.pinDesc}>Chân OUT nối chân GPIO 35 (ESP32) hoặc A1 (Arduino).</Text>
+              <Text style={styles.pinDesc}>Chân OUT nối chân GPIO 35 (ESP32).</Text>
             </View>
 
             <View style={styles.guideItem}>
-              <Text style={styles.pinLabel}>🌡️ Cảm biến DHT11/DHT22 (Nhiệt độ & Độ ẩm):</Text>
-              <Text style={styles.pinDesc}>Chân Data nối chân GPIO 4 (ESP32) hoặc D2 (Arduino).</Text>
+              <Text style={styles.pinLabel}>🌡️ Cảm biến DHT11 (Nhiệt độ & Độ ẩm):</Text>
+              <Text style={styles.pinDesc}>Chân Data nối chân GPIO 4 (ESP32).</Text>
             </View>
 
             <View style={styles.guideItem}>
-              <Text style={styles.pinLabel}>🚪 Cổng ra vào (Servo Motor / Chốt khóa từ):</Text>
-              <Text style={styles.pinDesc}>Chân PWM nối GPIO 18 (ESP32) điều khiển góc 0° (Đóng) - 90° (Mở).</Text>
+              <Text style={styles.pinLabel}>🚪 Cổng ra vào (Servo Motor SG90):</Text>
+              <Text style={styles.pinDesc}>Chân PWM nối GPIO 13 (ESP32) điều khiển góc 0° (Đóng) - 90° (Mở).</Text>
+            </View>
+
+            <View style={styles.guideItem}>
+              <Text style={styles.pinLabel}>🪪 Đầu đọc RFID RC522 (Giao tiếp SPI):</Text>
+              <Text style={styles.pinDesc}>SDA: GPIO 5 | SCK: GPIO 18 | MOSI: GPIO 23 | MISO: GPIO 19 | RST: GPIO 26.</Text>
             </View>
           </View>
         )}
       </View>
 
-      {/* Arduino / ESP32 Hardware IP Bridge */}
+      {/* Cấu hình Đám Mây Firebase Realtime Database */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Kết Nối Arduino / ESP32 Thật</Text>
+        <View style={styles.rowBetween}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.cardTitle}>Đồng Bộ Firebase Realtime Database</Text>
+            <Text style={styles.cardDesc}>
+              Đồng bộ dữ liệu cảm biến và nhận lệnh điều khiển tức thì từ xa qua Internet / 4G (Dự án: ltdd-945a5).
+            </Text>
+          </View>
+          <Switch
+            value={useFirebase}
+            onValueChange={setUseFirebase}
+            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            thumbColor={COLORS.white}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Firebase Realtime DB URL (Máy chủ Singapore)</Text>
+          <TextInput
+            style={styles.textInput}
+            value={firebaseUrl}
+            onChangeText={setFirebaseUrl}
+            placeholder="https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app"
+            placeholderTextColor={COLORS.textMuted}
+            autoCapitalize="none"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={handleSaveSettings}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="cloud-upload-outline" size={18} color={COLORS.white} />
+          <Text style={styles.saveBtnText}>Lưu Cấu Hình Firebase</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Cấu hình kết nối trực tiếp ESP32 qua mạng LAN */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Kết Nối ESP32 Nội Bộ (Wi-Fi LAN)</Text>
         <Text style={styles.cardDesc}>
-          Địa chỉ IP của Arduino (nếu có WiFi) hoặc IP máy tính chạy script bridge nối Arduino qua cáp USB.
+          Địa chỉ IP của vi điều khiển ESP32 khi kết nối cùng mạng Wi-Fi cục bộ để phản hồi trực tiếp không qua Internet.
         </Text>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Địa chỉ API Cảm biến (HTTP URL)</Text>
+          <Text style={styles.inputLabel}>Địa chỉ Web Server ESP32 (HTTP URL)</Text>
           <TextInput
             style={styles.textInput}
             value={hardwareServerUrl}
             onChangeText={setHardwareServerUrl}
-            placeholder="http://192.168.1.100:5000"
+            placeholder="http://192.168.1.6:5000 hoặc http://IP_ESP32"
             placeholderTextColor={COLORS.textMuted}
             autoCapitalize="none"
           />
@@ -179,75 +228,11 @@ export default function SettingsScreen() {
           activeOpacity={0.8}
         >
           <Ionicons name="link-outline" size={18} color={COLORS.white} />
-          <Text style={styles.saveBtnText}>Lưu Địa Chỉ Kết Nối</Text>
+          <Text style={styles.saveBtnText}>Lưu Địa Chỉ ESP32 LAN</Text>
         </TouchableOpacity>
       </View>
 
-      {/* MQTT Broker Settings */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Cấu Hình MQTT Broker / Cloud</Text>
-        <Text style={styles.cardDesc}>
-          Kết nối với MQTT Broker để nhận dữ liệu từ vi điều khiển qua WiFi.
-        </Text>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>MQTT Broker Host</Text>
-          <TextInput
-            style={styles.textInput}
-            value={brokerUrl}
-            onChangeText={setBrokerUrl}
-            placeholder="broker.emqx.io hoặc IP ESP32"
-            placeholderTextColor={COLORS.textMuted}
-          />
-        </View>
-
-        <View style={styles.rowTwoCols}>
-          <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={styles.inputLabel}>Port</Text>
-            <TextInput
-              style={styles.textInput}
-              value={port}
-              onChangeText={setPort}
-              keyboardType="numeric"
-              placeholder="1883"
-              placeholderTextColor={COLORS.textMuted}
-            />
-          </View>
-
-          <View style={[styles.inputGroup, { flex: 2 }]}>
-            <Text style={styles.inputLabel}>Topic Prefix</Text>
-            <TextInput
-              style={styles.textInput}
-              value={topicPrefix}
-              onChangeText={setTopicPrefix}
-              placeholder="smart_home_group3"
-              placeholderTextColor={COLORS.textMuted}
-            />
-          </View>
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Firebase Realtime DB URL (Tùy chọn)</Text>
-          <TextInput
-            style={styles.textInput}
-            value={firebaseUrl}
-            onChangeText={setFirebaseUrl}
-            placeholder="https://your-app-default-rtdb.firebaseio.com"
-            placeholderTextColor={COLORS.textMuted}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={handleSaveSettings}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="save-outline" size={18} color={COLORS.white} />
-          <Text style={styles.saveBtnText}>Lưu Cấu Hình</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Reset Defaults */}
+      {/* Khôi phục cài đặt gốc */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Dọn Dẹp & Đặt Lại</Text>
         <Text style={styles.cardDesc}>Khôi phục lại danh sách các cảm biến và nhật ký ban đầu.</Text>
@@ -261,14 +246,14 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* App Info Footer */}
+      {/* Thông tin chân trang đồ án */}
       <View style={styles.aboutFooter}>
         <Text style={styles.aboutTitle}>ĐỒ ÁN LẬP TRÌNH DI ĐỘNG (LTDD)</Text>
-        <Text style={styles.aboutSubtitle}>NHÓM 3 - HỆ THỐNG IOT SMART HOME & AN NINH</Text>
-        <Text style={styles.aboutVersion}>Phiên bản 1.0.0 (Expo SDK 58)</Text>
+        <Text style={styles.aboutSubtitle}>NHÓM 3 - HỆ THỐNG IOT SMART HOME & AN NINH CỔNG RA VÀO</Text>
+        <Text style={styles.aboutVersion}>Triển khai Vercel Web & Expo Go Mobile (SDK 58)</Text>
       </View>
 
-      {/* Add Sensor Modal */}
+      {/* Cửa sổ Modal thêm cảm biến */}
       <AddSensorModal visible={modalVisible} onClose={() => setModalVisible(false)} />
     </ScrollView>
   );
@@ -386,10 +371,6 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  rowTwoCols: {
-    flexDirection: 'row',
-    gap: 12,
   },
   saveBtn: {
     flexDirection: 'row',

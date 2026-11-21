@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
@@ -13,7 +13,7 @@ import GenericSensorCard from '../components/GenericSensorCard';
 import AddSensorModal from '../components/AddSensorModal';
 
 export default function DashboardScreen({ navigation, onNavigateTab }) {
-  const { sensors, gateState, alerts } = useIoT();
+  const { sensors, gateState, alerts, toggleGate, toggleLight, isLightOn, rfidInfo } = useIoT();
   const [modalVisible, setModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -81,6 +81,80 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
           </View>
         </View>
 
+        {/* Quick Remote Controls Row (Cổng & Đèn LED D2) */}
+        <View style={styles.quickControlsRow}>
+          {/* Quick Toggle Gate */}
+          <TouchableOpacity
+            style={[styles.quickControlCard, gateState.isOpen ? styles.controlCardActiveWarning : styles.controlCardNormal]}
+            onPress={() => toggleGate('Bảng điều khiển nhanh')}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.controlIconBox, { backgroundColor: gateState.isOpen ? 'rgba(245, 158, 11, 0.2)' : 'rgba(139, 92, 246, 0.15)' }]}>
+              <Ionicons
+                name={gateState.isOpen ? 'lock-open' : 'lock-closed'}
+                size={22}
+                color={gateState.isOpen ? COLORS.warning : COLORS.accent}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.controlTitle}>Cổng ra vào</Text>
+              <Text style={[styles.controlStatus, { color: gateState.isOpen ? COLORS.warning : COLORS.textSecondary }]}>
+                {gateState.isOpen ? 'Đang mở' : 'Đã khóa'}
+              </Text>
+            </View>
+            <Ionicons name="power" size={18} color={gateState.isOpen ? COLORS.warning : COLORS.textMuted} />
+          </TouchableOpacity>
+
+          {/* Quick Toggle Light */}
+          <TouchableOpacity
+            style={[styles.quickControlCard, isLightOn ? styles.controlCardActiveLight : styles.controlCardNormal]}
+            onPress={toggleLight}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.controlIconBox, { backgroundColor: isLightOn ? 'rgba(234, 179, 8, 0.25)' : 'rgba(100, 116, 139, 0.15)' }]}>
+              <Ionicons
+                name={isLightOn ? 'bulb' : 'bulb-outline'}
+                size={22}
+                color={isLightOn ? '#FACC15' : COLORS.textMuted}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.controlTitle}>Đèn LED (D2)</Text>
+              <Text style={[styles.controlStatus, { color: isLightOn ? '#FACC15' : COLORS.textSecondary }]}>
+                {isLightOn ? 'Bật sáng' : 'Tắt'}
+              </Text>
+            </View>
+            <Ionicons name="power" size={18} color={isLightOn ? '#FACC15' : COLORS.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Thẻ RFID vừa quẹt Card */}
+        {rfidInfo?.lastUid ? (
+          <View style={styles.rfidBannerCard}>
+            <View style={[styles.rfidIconCircle, { backgroundColor: rfidInfo.isValid ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
+              <Ionicons
+                name="card"
+                size={20}
+                color={rfidInfo.isValid ? COLORS.success : COLORS.danger}
+              />
+            </View>
+            <View style={{ flex: 1, paddingHorizontal: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.rfidTitle}>Thẻ RFID:</Text>
+                <Text style={styles.rfidUid}>{rfidInfo.lastUid}</Text>
+              </View>
+              <Text style={styles.rfidSub}>
+                {rfidInfo.isValid ? '✓ Xác thực mở cửa thành công' : '✕ Thẻ không khớp'} • {rfidInfo.lastScanTime || 'Vừa xong'}
+              </Text>
+            </View>
+            <View style={[styles.rfidStatusBadge, { backgroundColor: rfidInfo.isValid ? COLORS.successMuted : COLORS.dangerMuted }]}>
+              <Text style={[styles.rfidStatusText, { color: rfidInfo.isValid ? COLORS.success : COLORS.danger }]}>
+                {rfidInfo.isValid ? 'HỢP LỆ' : 'TỪ CHỐI'}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Cổng ra vào (Door / Entrance Gate) */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Cổng Kiểm Soát Ra Vào</Text>
@@ -90,22 +164,22 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
         </View>
         <GateControlCard onNavigateToGate={() => onNavigateTab && onNavigateTab('Gate')} />
 
-        {/* Core Sensors */}
+        {/* Core Sensors - Cảm biến phần cứng thực tế (DHT11 Nhiệt độ & Độ ẩm) */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Cảm Biến Môi Trường & An Toàn</Text>
+          <Text style={styles.sectionTitle}>Cảm Biến Môi Trường (DHT11)</Text>
           <TouchableOpacity onPress={() => onNavigateTab && onNavigateTab('History')}>
             <Text style={styles.sectionAction}>Lịch sử đo</Text>
           </TouchableOpacity>
         </View>
 
-        {/* 1. Cảm biến Nước */}
-        <WaterSensorCard sensor={waterSensor} />
-
-        {/* 2. Cảm biến Âm thanh */}
-        <SoundSensorCard sensor={soundSensor} />
-
-        {/* 3. Cảm biến Nhiệt độ & Độ ẩm (DHT11/22) */}
+        {/* Cảm biến Nhiệt độ & Độ ẩm vật lý (DHT11) */}
         <TempHumidityCard tempSensor={tempSensor} humSensor={humSensor} />
+
+        {/* Cảm biến Nước (Nếu có mở rộng kết nối thêm) */}
+        {waterSensor && <WaterSensorCard sensor={waterSensor} />}
+
+        {/* Cảm biến Âm thanh (Nếu có mở rộng kết nối thêm) */}
+        {soundSensor && <SoundSensorCard sensor={soundSensor} />}
 
         {/* Dynamic / Additional Sensors (Future expansion) */}
         {customSensors.length > 0 && (
@@ -184,6 +258,97 @@ const styles = StyleSheet.create({
     width: 1,
     height: 24,
     backgroundColor: COLORS.border,
+  },
+  quickControlsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: SIZES.md,
+  },
+  quickControlCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: SIZES.radiusMd,
+    borderWidth: 1,
+    gap: 10,
+    ...SHADOWS.small,
+  },
+  controlCardNormal: {
+    backgroundColor: COLORS.cardBg,
+    borderColor: COLORS.border,
+  },
+  controlCardActiveWarning: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+  },
+  controlCardActiveLight: {
+    backgroundColor: 'rgba(234, 179, 8, 0.12)',
+    borderColor: 'rgba(234, 179, 8, 0.45)',
+  },
+  controlIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  controlTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  controlStatus: {
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  rfidBannerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.cardBg,
+    borderRadius: SIZES.radiusMd,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: SIZES.md,
+    ...SHADOWS.small,
+  },
+  rfidIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rfidTitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  rfidUid: {
+    fontSize: 13,
+    color: COLORS.textPrimary,
+    fontWeight: '800',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 1,
+  },
+  rfidSub: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  rfidStatusBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: SIZES.radiusSm,
+  },
+  rfidStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   sectionHeaderRow: {
     flexDirection: 'row',

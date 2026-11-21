@@ -5,7 +5,7 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
 export default function GateScreen() {
-  const { gateState, toggleGate, updateGateMode } = useIoT();
+  const { gateState, toggleGate, updateGateMode, rfidInfo } = useIoT();
   const isOpen = gateState.isOpen;
 
   const [selectedDelay, setSelectedDelay] = useState(gateState.autoCloseDelaySec || 10);
@@ -64,6 +64,39 @@ export default function GateScreen() {
             {isOpen ? 'Nhấn để Đóng Cổng ngay' : 'Nhấn để Mở Cổng ra vào'}
           </Text>
         </TouchableOpacity>
+      </View>
+
+      {/* RFID Live Hardware Monitor */}
+      <View style={styles.rfidHardwareCard}>
+        <View style={styles.rfidHardwareHeader}>
+          <View style={styles.rfidHeaderLeft}>
+            <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primaryLight} />
+            <Text style={styles.rfidHardwareTitle}>Đầu đọc thẻ RFID RC522 (ESP32)</Text>
+          </View>
+          <View style={[styles.rfidLivePill, { backgroundColor: rfidInfo?.isValid ? COLORS.successMuted : 'rgba(100, 116, 139, 0.2)' }]}>
+            <View style={[styles.rfidLiveDot, { backgroundColor: rfidInfo?.isValid ? COLORS.success : COLORS.textMuted }]} />
+            <Text style={[styles.rfidLiveText, { color: rfidInfo?.isValid ? COLORS.success : COLORS.textSecondary }]}>
+              {rfidInfo?.lastUid ? (rfidInfo.isValid ? 'ĐÃ XÁC THỰC' : 'TỪ CHỐI') : 'CHỜ QUẸT'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.rfidGridRow}>
+          <View style={styles.rfidCol}>
+            <Text style={styles.rfidColLabel}>Thẻ vừa quét</Text>
+            <Text style={styles.rfidColValue}>{rfidInfo?.lastUid || 'Chưa có'}</Text>
+          </View>
+          <View style={styles.rfidColDivider} />
+          <View style={styles.rfidCol}>
+            <Text style={styles.rfidColLabel}>Thẻ Master hệ thống</Text>
+            <Text style={styles.rfidColValue}>{rfidInfo?.masterUid || '239A6C06'}</Text>
+          </View>
+          <View style={styles.rfidColDivider} />
+          <View style={styles.rfidCol}>
+            <Text style={styles.rfidColLabel}>Thời gian</Text>
+            <Text style={styles.rfidColValue}>{rfidInfo?.lastScanTime || 'Mặc định'}</Text>
+          </View>
+        </View>
       </View>
 
       {/* Quick Test Methods */}
@@ -258,6 +291,75 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '700',
+  },
+  rfidHardwareCard: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: SIZES.radiusMd,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: SIZES.md,
+    ...SHADOWS.small,
+  },
+  rfidHardwareHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  rfidHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rfidHardwareTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  rfidLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: SIZES.radiusFull,
+    gap: 5,
+  },
+  rfidLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  rfidLiveText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  rfidGridRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.6)',
+  },
+  rfidCol: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  rfidColLabel: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginBottom: 2,
+  },
+  rfidColValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primaryLight,
+  },
+  rfidColDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: COLORS.border,
   },
   sectionHeader: {
     fontSize: 13,

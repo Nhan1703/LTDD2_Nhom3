@@ -12,6 +12,8 @@
  */
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = 5000;
 
@@ -22,10 +24,49 @@ let latestData = {
   temp: 28.5,
   hum: 65.0,
   gate: false,
+  light: false,
+  rfid: '',
+  master: '',
   lastUpdate: new Date().toISOString(),
 };
 
 let serialPort = null;
+let firebaseDb = null;
+
+// Khởi tạo kết nối Firebase Admin SDK nếu có file Service Account Key
+try {
+  const keyPath = path.join(__dirname, 'firebase-admin-key.json');
+  if (fs.existsSync(keyPath)) {
+    const admin = require('firebase-admin');
+    const serviceAccount = require(keyPath);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app',
+    });
+    firebaseDb = admin.database();
+    console.log('🔥 ĐÃ KẾT NỐI THÀNH CÔNG VỚI FIREBASE ADMIN SDK (ltdd-945a5)!');
+
+    // Lắng nghe lệnh từ xa từ App qua Firebase Cloud
+    firebaseDb.ref('smart_home/commands').on('value', snapshot => {
+      const val = snapshot.val();
+      if (!val) return;
+      if (val.gate !== undefined) {
+        latestData.gate = Boolean(val.gate);
+        if (serialPort && serialPort.isOpen) {
+          serialPort.write(val.gate ? 'GATE_OPEN\n' : 'GATE_CLOSE\n');
+        }
+      }
+      if (val.light !== undefined) {
+        latestData.light = Boolean(val.light);
+        if (serialPort && serialPort.isOpen) {
+          serialPort.write(val.light ? 'LIGHT_ON\n' : 'LIGHT_OFF\n');
+        }
+      }
+    });
+  }
+} catch (e) {
+  // Có thể chạy bình thường mà không cần firebase-admin
+}
 
 // Thử kết nối thư viện serialport nếu đã cài đặt
 let isReconnecting = false;
@@ -82,6 +123,9 @@ async function initSerial() {
           }
 
           latestData = { ...latestData, ...parsed, lastUpdate: new Date().toISOString() };
+          if (firebaseDb) {
+            firebaseDb.ref('smart_home/telemetry').set(latestData).catch(() => {});
+          }
           const tempDisplay = parsed.dht_ok === false ? 'LỖI D2 (Kiểm tra chân)' : `${latestData.temp}°C`;
           console.log(`[Arduino Data]: Nước: ${latestData.water}% | Âm thanh: ${latestData.sound}dB | Đèn: ${latestData.light ? '💡SÁNG' : 'TẮT'} | Nhiệt độ: ${tempDisplay} | Cổng: ${latestData.gate ? 'MỞ' : 'ĐÓNG'}`);
         } catch (e) {
