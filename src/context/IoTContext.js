@@ -265,25 +265,28 @@ export const IoTProvider = ({ children }) => {
       }
     } catch (e) {}
 
-    // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN
-    try {
-      let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
-      if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-        targetUrl = 'http://localhost:5000';
-      } else {
-        targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
-      }
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 500);
-      fetch(`${targetUrl}/api/light`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ light: nextState, on: nextState }),
-        signal: controller.signal,
-      })
-        .then(() => clearTimeout(timeoutId))
-        .catch(() => clearTimeout(timeoutId));
-    } catch (e) {}
+    // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
+    const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+    if (!isHttps) {
+      try {
+        let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+        if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+          targetUrl = 'http://localhost:5000';
+        } else {
+          targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 400);
+        fetch(`${targetUrl}/api/light`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ light: nextState, on: nextState }),
+          signal: controller.signal,
+        })
+          .then(() => clearTimeout(timeoutId))
+          .catch(() => clearTimeout(timeoutId));
+      } catch (e) {}
+    }
   };
 
   // Hàm tạo cảnh báo không trùng lặp
@@ -405,30 +408,32 @@ export const IoTProvider = ({ children }) => {
       }
     } catch (e) {}
 
-    // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN với timeout 500ms
-    try {
-      let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
-      if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-        targetUrl = 'http://localhost:5000';
-      } else {
-        targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
-      }
+    // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
+    if (!isHttps) {
+      try {
+        let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+        if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+          targetUrl = 'http://localhost:5000';
+        } else {
+          targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
+        }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 500);
-      fetch(`${targetUrl}/api/gate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          open: willBeOpen,
-          action: willBeOpen ? 'OPEN' : 'CLOSE',
-          method,
-        }),
-        signal: controller.signal,
-      })
-        .then(() => clearTimeout(timeoutId))
-        .catch(() => clearTimeout(timeoutId));
-    } catch (e) {}
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 400);
+        fetch(`${targetUrl}/api/gate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            open: willBeOpen,
+            action: willBeOpen ? 'OPEN' : 'CLOSE',
+            method,
+          }),
+          signal: controller.signal,
+        })
+          .then(() => clearTimeout(timeoutId))
+          .catch(() => clearTimeout(timeoutId));
+      } catch (e) {}
+    }
 
     // Tạo thông báo lịch sử cổng
     const newAlert = {

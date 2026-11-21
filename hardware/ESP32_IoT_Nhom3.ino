@@ -372,8 +372,6 @@ void capNhatLCD() {
 // Tạo chuỗi định dạng JSON chuẩn chứa toàn bộ thông số nhà thông minh
 String taoChuoiJson() {
   String json = "{";
-  json += "\"water\":0,";
-  json += "\"sound\":35,";
   json += "\"temp\":" + String(nhietDo, 1) + ",";
   json += "\"hum\":" + String(doAm, 0) + ",";
   json += "\"dht_ok\":" + String((nhietDo > 0) ? "true" : "false") + ",";
@@ -438,17 +436,18 @@ void xoaLenhCongFirebase() {
   client.stop();
 }
 
-// Kiểm tra lệnh điều khiển từ App thông qua Firebase (/smart_home/commands.json) với phản hồi siêu tốc (< 800ms)
+// Kiểm tra lệnh điều khiển từ App thông qua Firebase (/smart_home/commands.json) với phản hồi siêu tốc (< 250ms)
 void kiemTraLenhFirebase() {
   if (WiFi.status() != WL_CONNECTED) return;
-  if (millis() - thoiGianKiemTraLenhFirebase < 800) return; // Quét lệnh mỗi 800ms
+  if (millis() - thoiGianKiemTraLenhFirebase < 250) return; // Quét lệnh phản hồi tức thì mỗi 250ms thay vì 800ms
   thoiGianKiemTraLenhFirebase = millis();
 
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(2); // Timeout nhanh 2 giây
+  client.setTimeout(1); // Giảm timeout xuống 1 giây để không chặn vòng lặp
 
   HTTPClient http;
+  http.setReuse(true); // Tái sử dụng socket HTTP giảm độ trễ bắt tay SSL
   String url = String(firebaseUrl) + "/smart_home/commands.json";
 
   http.begin(client, url);
