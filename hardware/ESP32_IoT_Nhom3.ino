@@ -609,6 +609,10 @@ void setup() {
   // Khởi tạo giao tiếp SPI cho đầu đọc thẻ RFID RC522
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
   rfid.PCD_Init();
+  delay(10);
+  rfid.PCD_SetAntennaGain(rfid.RxGain_max); // Tối đa hóa độ nhạy anten giúp bắt thẻ từ xa hơn
+  Serial.print("[RFID] Phien ban chip RC522: ");
+  rfid.PCD_DumpVersionToSerial(); // Tu dong chan doan loi day noi len Serial Monitor
 
   // Tải thẻ Master đã lưu từ bộ nhớ Flash NVS
   docTheMaster();

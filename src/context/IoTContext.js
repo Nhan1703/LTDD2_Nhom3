@@ -77,10 +77,11 @@ export const IoTProvider = ({ children }) => {
         if (!savedSettings.hardwareServerUrl || savedSettings.hardwareServerUrl.includes('192.168.1.100')) {
           savedSettings.hardwareServerUrl = 'http://192.168.1.6:5000';
         }
-        if (!savedSettings.firebaseUrl || savedSettings.firebaseUrl.includes('smart-iot-group3')) {
+        if (!savedSettings.firebaseUrl || savedSettings.firebaseUrl.includes('smart-iot-group3') || !savedSettings.firebaseUrl.includes('ltdd-945a5')) {
           savedSettings.firebaseUrl = 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app';
         }
-        setNetworkConfig(prev => ({ ...prev, ...savedSettings }));
+        savedSettings.useFirebase = true;
+        setNetworkConfig(prev => ({ ...prev, ...savedSettings, useFirebase: true }));
       }
     }
     loadData();
@@ -134,48 +135,52 @@ export const IoTProvider = ({ children }) => {
     }
 
     const fbUrl = (networkConfig.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app').replace(/\/+$/, '');
+    const isHttpsWeb = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
 
+    let isFetching = false;
     const interval = setInterval(async () => {
-      let data = null;
-      let activeSource = '';
+      if (isFetching) return;
+      isFetching = true;
 
-      // 1. Đọc dữ liệu trực tiếp từ ESP32 qua mạng nội bộ Wi-Fi LAN nếu đang kết nối cùng mạng
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 900);
-        const response = await fetch(`${url}/api/sensors`, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-          data = await response.json();
-          activeSource = 'Wi-Fi LAN';
-        }
-      } catch (err) {
-        // Mạng nội bộ không phản hồi, tự động đọc qua Firebase Cloud
-      }
+        let data = null;
+        let activeSource = '';
 
-      // 2. Đọc từ Firebase Realtime Database qua mạng Internet / 4G
-      if (!data && networkConfig.useFirebase !== false && fbUrl) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1800);
-          const response = await fetch(`${fbUrl}/smart_home/telemetry.json`, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          if (response.ok) {
-            const fbData = await response.json();
-            if (fbData && typeof fbData === 'object' && (fbData.temp !== undefined || fbData.gate !== undefined || fbData.rfid !== undefined)) {
-              data = fbData;
-              activeSource = 'Firebase Cloud';
+        // 1. Nếu không phải HTTPS Web (ví dụ Mobile Expo Go hoặc localhost), thử LAN HTTP trước
+        if (!isHttpsWeb && url) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 600);
+            const response = await fetch(`${url}/api/sensors`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+              data = await response.json();
+              activeSource = 'Wi-Fi LAN';
             }
-          }
-        } catch (err) {
-          // Lỗi kết nối Firebase Cloud
+          } catch (err) {}
         }
-      }
 
-      if (data) {
-        setIsHardwareConnected(true);
-        if (activeSource) setConnectionSource(activeSource);
-        if (data.light !== undefined) setIsLightOn(Boolean(data.light));
+        // 2. Đọc trực tiếp từ Firebase Realtime Database (Ưu tiên số 1 cho Web Vercel)
+        if (!data && fbUrl) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const response = await fetch(`${fbUrl}/smart_home/telemetry.json`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+              const fbData = await response.json();
+              if (fbData && typeof fbData === 'object' && (fbData.temp !== undefined || fbData.gate !== undefined || fbData.rfid !== undefined)) {
+                data = fbData;
+                activeSource = 'Firebase Cloud';
+              }
+            }
+          } catch (err) {}
+        }
+
+        if (data) {
+          setIsHardwareConnected(true);
+          if (activeSource) setConnectionSource(activeSource);
+          if (data.light !== undefined) setIsLightOn(Boolean(data.light));
 
         // Cập nhật thông tin thẻ RFID vừa quẹt
         if (data.rfid && String(data.rfid).trim().length > 0) {
@@ -233,7 +238,10 @@ export const IoTProvider = ({ children }) => {
       } else {
         setIsHardwareConnected(false);
       }
-    }, 1000);
+    } finally {
+      isFetching = false;
+    }
+  }, 1200);
 
     return () => clearInterval(interval);
   }, [isSimulating, networkConfig.hardwareServerUrl, networkConfig.firebaseUrl, networkConfig.useFirebase]);
