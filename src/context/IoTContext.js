@@ -36,6 +36,8 @@ export const IoTProvider = ({ children }) => {
     lastScanTime: '',
     isValid: false,
   });
+  // Địa chỉ IP của ESP32 tự động nhận diện từ Firebase Cloud
+  const [detectedEsp32Ip, setDetectedEsp32Ip] = useState(null);
   // Cấu hình mạng: Kết nối Firebase Cloud và Web Server ESP32 LAN (Đã loại bỏ hoàn toàn MQTT)
   const [networkConfig, setNetworkConfig] = useState({
     hardwareServerUrl: 'http://192.168.1.6:5000',
@@ -210,6 +212,13 @@ export const IoTProvider = ({ children }) => {
           setIsHardwareConnected(true);
           if (activeSource) setConnectionSource(activeSource);
           if (data.light !== undefined) setIsLightOn(Boolean(data.light));
+
+          // Tự động lưu địa chỉ IP của ESP32 khi nhận được từ Firebase hoặc LAN
+          if (data.ip && typeof data.ip === 'string' && data.ip.trim().length > 0) {
+            const cleanIp = data.ip.trim();
+            const formattedIp = cleanIp.startsWith('http') ? cleanIp : `http://${cleanIp}`;
+            setDetectedEsp32Ip(formattedIp);
+          }
 
           // Cập nhật thông tin thẻ RFID vừa quẹt
           if (data.rfid && String(data.rfid).trim().length > 0) {
@@ -622,6 +631,7 @@ export const IoTProvider = ({ children }) => {
         connectionSource,
         isLightOn,
         rfidInfo,
+        detectedEsp32Ip,
         networkConfig,
         mqttConfig: networkConfig, // Giữ tương thích ngược
         toggleGate,

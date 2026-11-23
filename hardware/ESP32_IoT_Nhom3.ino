@@ -379,6 +379,7 @@ String taoChuoiJson() {
   json += "\"light\":" + String(trangThaiDen ? "true" : "false") + ",";
   json += "\"rfid\":\"" + uidTheVuaQuet + "\",";
   json += "\"master\":\"" + uidTheMaster + "\",";
+  json += "\"ip\":\"http://" + WiFi.localIP().toString() + "\","; // Tự động đồng bộ địa chỉ IP mạng LAN nội bộ của ESP32 lên Firebase Cloud
   json += "\"updatedAt\":" + String(millis());
   json += "}";
   return json;
@@ -566,6 +567,9 @@ void ketNoiWiFi() {
 
     hienThi("WIFI CONNECTED", WiFi.localIP().toString());
     delay(2000);
+
+    // Gửi ngay IP và thông số ban đầu lên Firebase Cloud
+    guiLenFirebase();
   } else {
     Serial.println();
     Serial.println("[WIFI] Ket noi that bai! He thong chay che do Ngoai tuyen (Offline).");

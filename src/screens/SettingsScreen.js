@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ export default function SettingsScreen() {
     isSimulating,
     setIsSimulating,
     networkConfig,
+    detectedEsp32Ip,
     updateSettings,
     resetToDefaults,
   } = useIoT();
@@ -31,6 +32,13 @@ export default function SettingsScreen() {
   const [useFirebase, setUseFirebase] = useState(networkConfig?.useFirebase !== false);
   const [modalVisible, setModalVisible] = useState(false);
   const [showHardwareGuide, setShowHardwareGuide] = useState(false);
+
+  // Tự động điền IP của ESP32 nếu hệ thống phát hiện từ Firebase Cloud
+  useEffect(() => {
+    if (detectedEsp32Ip && (!hardwareServerUrl || hardwareServerUrl.includes('192.168.1.6:5000'))) {
+      setHardwareServerUrl(detectedEsp32Ip);
+    }
+  }, [detectedEsp32Ip]);
 
   // Lưu thiết lập cấu hình mạng
   const handleSaveSettings = () => {
@@ -203,12 +211,59 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Cấu hình kết nối trực tiếp ESP32 qua mạng LAN */}
+      {/* Cấu hình kết nối trực tiếp ESP32 qua mạng Wi-Fi LAN với tính năng tự động nhận diện IP */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Kết Nối ESP32 Nội Bộ (Wi-Fi LAN)</Text>
+        <View style={styles.rowBetween}>
+          <Text style={styles.cardTitle}>Kết Nối ESP32 Nội Bộ (Wi-Fi LAN)</Text>
+          {detectedEsp32Ip ? (
+            <View style={styles.ipFoundBadge}>
+              <View style={styles.ipFoundDot} />
+              <Text style={styles.ipFoundBadgeText}>Đã tìm thấy</Text>
+            </View>
+          ) : (
+            <View style={styles.ipSearchingBadge}>
+              <Ionicons name="radio-outline" size={13} color={COLORS.textMuted} />
+              <Text style={styles.ipSearchingBadgeText}>Đang dò tìm</Text>
+            </View>
+          )}
+        </View>
+
         <Text style={styles.cardDesc}>
           Địa chỉ IP của vi điều khiển ESP32 khi kết nối cùng mạng Wi-Fi cục bộ để phản hồi trực tiếp không qua Internet.
         </Text>
+
+        {/* Khối hiển thị kết quả tự động phát hiện IP từ Firebase */}
+        {detectedEsp32Ip ? (
+          <View style={styles.ipFoundBox}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.ipFoundBoxLabel}>⚡ ĐÃ TỰ ĐỘNG PHÁT HIỆN IP ESP32:</Text>
+              <Text style={styles.ipFoundBoxValue}>{detectedEsp32Ip}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.applyIpBtn}
+              onPress={() => {
+                setHardwareServerUrl(detectedEsp32Ip);
+                updateSettings({ hardwareServerUrl: detectedEsp32Ip });
+                if (Platform.OS === 'web') {
+                  window.alert(`Đã tự động điền IP ${detectedEsp32Ip} vào cấu hình LAN!`);
+                } else {
+                  Alert.alert('Thành công', `Đã tự động điền IP ${detectedEsp32Ip} vào cấu hình LAN!`);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="flash" size={14} color={COLORS.white} />
+              <Text style={styles.applyIpBtnText}>Tự Động Nhập</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.ipWaitingBox}>
+            <Ionicons name="wifi-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.ipWaitingBoxText}>
+              Hệ thống đang tự động lắng nghe địa chỉ IP khi ESP32 cắm nguồn và kết nối Wi-Fi...
+            </Text>
+          </View>
+        )}
 
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Địa chỉ Web Server ESP32 (HTTP URL)</Text>
@@ -216,20 +271,47 @@ export default function SettingsScreen() {
             style={styles.textInput}
             value={hardwareServerUrl}
             onChangeText={setHardwareServerUrl}
-            placeholder="http://192.168.1.6:5000 hoặc http://IP_ESP32"
+            placeholder="http://192.168.1.23 hoặc http://IP_ESP32"
             placeholderTextColor={COLORS.textMuted}
             autoCapitalize="none"
           />
         </View>
 
-        <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={handleSaveSettings}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="link-outline" size={18} color={COLORS.white} />
-          <Text style={styles.saveBtnText}>Lưu Địa Chỉ ESP32 LAN</Text>
-        </TouchableOpacity>
+        <View style={styles.lanButtonsRow}>
+          <TouchableOpacity
+            style={styles.autoDetectBtn}
+            onPress={() => {
+              if (detectedEsp32Ip) {
+                setHardwareServerUrl(detectedEsp32Ip);
+                updateSettings({ hardwareServerUrl: detectedEsp32Ip });
+                if (Platform.OS === 'web') {
+                  window.alert(`Đã tự động nhận diện và cập nhật IP: ${detectedEsp32Ip}`);
+                } else {
+                  Alert.alert('Đã nhận diện', `Đã tự động nhận diện và cập nhật IP: ${detectedEsp32Ip}`);
+                }
+              } else {
+                if (Platform.OS === 'web') {
+                  window.alert('Đang chờ ESP32 gửi tín hiệu IP lên Firebase Cloud. Vui lòng cắm nguồn ESP32 và đảm bảo đã kết nối Wi-Fi.');
+                } else {
+                  Alert.alert('Đang dò tìm', 'Đang chờ ESP32 gửi tín hiệu IP lên Firebase Cloud. Vui lòng cắm nguồn ESP32 và đảm bảo đã kết nối Wi-Fi.');
+                }
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="sync-outline" size={18} color={COLORS.primary} />
+            <Text style={styles.autoDetectBtnText}>Tự Động Dò IP</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.saveLanBtn}
+            onPress={handleSaveSettings}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="save-outline" size={18} color={COLORS.white} />
+            <Text style={styles.saveLanBtnText}>Lưu Địa Chỉ</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Khôi phục cài đặt gốc */}
@@ -424,5 +506,133 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textMuted,
     marginTop: 2,
+  },
+  ipFoundBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: SIZES.radiusFull,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  ipFoundDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.success,
+  },
+  ipFoundBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.success,
+  },
+  ipSearchingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: SIZES.radiusFull,
+    backgroundColor: '#F1F5F9',
+  },
+  ipSearchingBadgeText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  ipFoundBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: SIZES.radiusMd,
+    padding: 12,
+    marginTop: SIZES.md,
+  },
+  ipFoundBoxLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#166534',
+    letterSpacing: 0.3,
+  },
+  ipFoundBoxValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#15803D',
+    marginTop: 2,
+  },
+  applyIpBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#16A34A',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: SIZES.radiusSm,
+    ...SHADOWS.small,
+  },
+  applyIpBtnText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  ipWaitingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    borderRadius: SIZES.radiusMd,
+    padding: 12,
+    marginTop: SIZES.md,
+  },
+  ipWaitingBoxText: {
+    fontSize: 12,
+    color: '#0369A1',
+    flex: 1,
+    lineHeight: 18,
+  },
+  lanButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: SIZES.lg,
+  },
+  autoDetectBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: SIZES.radiusMd,
+    paddingVertical: 14,
+  },
+  autoDetectBtnText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  saveLanBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    borderRadius: SIZES.radiusMd,
+    paddingVertical: 14,
+    ...SHADOWS.small,
+  },
+  saveLanBtnText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
