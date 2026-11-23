@@ -104,7 +104,7 @@ export default function AddSensorModal({ visible, onClose }) {
                     <Text
                       style={[
                         styles.presetChipText,
-                        isSelected && { color: COLORS.white, fontWeight: '700' },
+                        isSelected && { color: preset.color, fontWeight: '700' },
                       ]}
                     >
                       {preset.name.split(' (')[0]}
@@ -216,11 +216,11 @@ export default function AddSensorModal({ visible, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)', // Nền làm mờ trong suốt nhẹ nhàng thay cho nền tối mịt
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBg, // Nền trắng sáng tinh tế
     borderTopLeftRadius: SIZES.radiusXl,
     borderTopRightRadius: SIZES.radiusXl,
     paddingTop: SIZES.lg,
@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
     maxHeight: '90%',
     borderWidth: 1,
     borderColor: COLORS.border,
+    ...SHADOWS.large,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -242,11 +243,11 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.textPrimary,
+    color: COLORS.textPrimary, // Chữ tiêu đề tương phản cao
   },
   sheetSubtitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
+    fontSize: 13,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -256,12 +257,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textSecondary,
     marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2, // Loại bỏ wide letter spacing và all-caps
   },
   presetsRow: {
     flexDirection: 'row',
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: COLORS.border,
     marginRight: 8,
@@ -282,25 +282,26 @@ const styles = StyleSheet.create({
   presetChipText: {
     fontSize: 12,
     color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   inputGroup: {
     marginBottom: SIZES.md,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.textSecondary,
     marginBottom: 6,
   },
   textInput: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
     color: COLORS.textPrimary,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#CBD5E1', // Viền slate-300 rõ nét dễ nhìn
   },
   rowTwoCols: {
     flexDirection: 'row',
@@ -310,17 +311,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    padding: 10,
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    padding: 12,
+    backgroundColor: '#F0F9FF', // Nền xanh pastel thông tin
     borderRadius: SIZES.radiusMd,
     borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.2)',
+    borderColor: '#BAE6FD',
     marginTop: 6,
   },
   hintText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: '#0369A1', // Màu chữ xanh biển sâu dễ đọc đạt chuẩn WCAG
     flex: 1,
+    lineHeight: 18,
   },
   footerActions: {
     flexDirection: 'row',
@@ -335,7 +337,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: SIZES.radiusMd,
-    backgroundColor: 'rgba(51, 65, 85, 0.4)',
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   cancelBtnText: {
     fontSize: 14,

@@ -456,13 +456,17 @@ void kiemTraLenhFirebase() {
   if (httpCode == 200) {
     String payload = http.getString();
 
-    // Kiểm tra lệnh mở hoặc đóng cửa từ Firebase
-    if (payload.indexOf("\"gate\":true") >= 0 && !trangThaiCua) {
-      moCua("Firebase App");
-      xoaLenhCongFirebase(); // Tiêu thụ lệnh ngay lập tức, ngăn lặp vô tận
-    } else if (payload.indexOf("\"gate\":false") >= 0 && trangThaiCua) {
-      dongCua();
-      xoaLenhCongFirebase(); // Tiêu thụ lệnh ngay lập tức
+    // Kiểm tra lệnh mở hoặc đóng cửa từ Firebase (xóa lệnh ngay lập tức để chống lặp mở/đóng vô tận)
+    if (payload.indexOf("\"gate\":true") >= 0) {
+      xoaLenhCongFirebase(); // Tiêu thụ và xóa lệnh trên Firebase trước tiên
+      if (!trangThaiCua) {
+        moCua("Firebase App");
+      }
+    } else if (payload.indexOf("\"gate\":false") >= 0) {
+      xoaLenhCongFirebase(); // Tiêu thụ và xóa lệnh trên Firebase trước tiên
+      if (trangThaiCua) {
+        dongCua();
+      }
     }
 
     // Kiểm tra lệnh bật hoặc tắt đèn từ Firebase

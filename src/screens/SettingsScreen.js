@@ -78,7 +78,7 @@ export default function SettingsScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Tiêu đề màn hình cài đặt */}
       <View style={styles.header}>
-        <Text style={styles.screenSubtitle}>CẤU HÌNH & KẾT NỐI</Text>
+        <Text style={styles.screenSubtitle}>Cấu hình & kết nối</Text>
         <Text style={styles.screenTitle}>Cài Đặt Hệ Thống</Text>
       </View>
 
@@ -273,10 +273,10 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.md,
   },
   screenSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primaryLight,
-    letterSpacing: 1.2,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
   screenTitle: {
     fontSize: 22,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     padding: SIZES.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.md,
+    marginBottom: SIZES.lg,
     ...SHADOWS.small,
   },
   rowBetween: {
@@ -299,15 +299,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   cardDesc: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    marginTop: 3,
-    lineHeight: 16,
+    marginTop: 4,
+    lineHeight: 18,
   },
   actionButton: {
     flexDirection: 'row',
@@ -337,19 +337,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   guideItem: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    padding: 10,
+    backgroundColor: '#F8FAFC',
+    padding: 12,
     borderRadius: SIZES.radiusSm,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.primaryLight,
+    borderLeftColor: COLORS.primary,
   },
   pinLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   pinDesc: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 3,
   },
@@ -357,51 +357,52 @@ const styles = StyleSheet.create({
     marginTop: SIZES.md,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textSecondary,
+    color: COLORS.textPrimary,
     marginBottom: 6,
   },
   textInput: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 14,
     color: COLORS.textPrimary,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#CBD5E1',
   },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: COLORS.secondary,
+    gap: 8,
+    backgroundColor: COLORS.primary,
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
+    paddingVertical: 14,
     marginTop: SIZES.lg,
+    ...SHADOWS.small,
   },
   saveBtnText: {
     color: COLORS.white,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   resetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    gap: 8,
+    backgroundColor: COLORS.dangerMuted,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: COLORS.dangerBorder,
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
+    paddingVertical: 14,
     marginTop: SIZES.md,
   },
   resetBtnText: {
     color: COLORS.danger,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   aboutFooter: {
@@ -409,18 +410,18 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   aboutTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: COLORS.primaryLight,
-    letterSpacing: 0.8,
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primary,
+    letterSpacing: 0.3,
   },
   aboutSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 4,
   },
   aboutVersion: {
-    fontSize: 10,
+    fontSize: 12,
     color: COLORS.textMuted,
     marginTop: 2,
   },

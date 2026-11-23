@@ -19,7 +19,7 @@ export default function HistoryScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.screenSubtitle}>PHÂN TÍCH & BIỂU ĐỒ</Text>
+        <Text style={styles.screenSubtitle}>Phân tích & biểu đồ</Text>
         <Text style={styles.screenTitle}>Lịch Sử Dữ Liệu Cảm Biến</Text>
       </View>
 
@@ -32,7 +32,7 @@ export default function HistoryScreen() {
               key={sensor.id}
               style={[
                 styles.sensorTab,
-                isSelected && { borderColor: sensor.color, backgroundColor: `${sensor.color}25` },
+                isSelected && { borderColor: sensor.color, backgroundColor: `${sensor.color}15` },
               ]}
               onPress={() => setSelectedSensorId(sensor.id)}
               activeOpacity={0.7}
@@ -45,7 +45,7 @@ export default function HistoryScreen() {
               <Text
                 style={[
                   styles.sensorTabText,
-                  isSelected && { color: COLORS.white, fontWeight: '700' },
+                  isSelected && { color: sensor.color, fontWeight: '700' },
                 ]}
               >
                 {sensor.name.split(' (')[0].split(' &')[0]}
@@ -87,7 +87,7 @@ export default function HistoryScreen() {
                           styles.barFill,
                           {
                             height: `${heightPercent}%`,
-                            backgroundColor: isLatest ? activeSensor.color : 'rgba(148, 163, 184, 0.4)',
+                            backgroundColor: isLatest ? activeSensor.color : '#CBD5E1',
                           },
                         ]}
                       />
@@ -167,17 +167,17 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 10,
+    paddingTop: 14,
     paddingBottom: 40,
   },
   header: {
     marginBottom: SIZES.md,
   },
   screenSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primaryLight,
-    letterSpacing: 1.2,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
   screenTitle: {
     fontSize: 22,
@@ -193,16 +193,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: SIZES.radiusFull,
     backgroundColor: COLORS.cardBg,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginRight: 8,
+    ...SHADOWS.small,
   },
   sensorTabText: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '600',
     color: COLORS.textSecondary,
   },
   chartCard: {
@@ -221,22 +223,22 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.lg,
   },
   chartTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   chartSubtitle: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 13,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   unitBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: SIZES.radiusSm,
   },
   unitBadgeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
   },
   chartArea: {
@@ -247,7 +249,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.4)',
+    borderBottomColor: '#F1F5F9',
   },
   barCol: {
     flex: 1,
@@ -256,14 +258,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   barValueText: {
-    fontSize: 9,
-    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   barTrack: {
     width: 14,
     height: '75%',
-    backgroundColor: 'rgba(51, 65, 85, 0.3)',
+    backgroundColor: '#F1F5F9',
     borderRadius: 7,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -273,9 +276,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   barIdxText: {
-    fontSize: 9,
-    color: COLORS.textMuted,
+    fontSize: 11,
+    color: COLORS.textSecondary,
     marginTop: 4,
+    fontWeight: '500',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -284,21 +288,23 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
     padding: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
+    ...SHADOWS.small,
   },
   statLabel: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginTop: 4,
+    fontWeight: '500',
   },
   statValue: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textPrimary,
     marginTop: 2,
   },
@@ -308,9 +314,10 @@ const styles = StyleSheet.create({
     padding: SIZES.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
+    ...SHADOWS.small,
   },
   infoCardTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 12,
@@ -318,17 +325,18 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.4)',
+    borderBottomColor: '#F1F5F9',
   },
   infoKey: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   infoVal: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
 });

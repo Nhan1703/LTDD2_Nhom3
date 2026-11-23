@@ -36,7 +36,7 @@ export default function AlertsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.screenSubtitle}>TRUNG TÂM AN NINH</Text>
+          <Text style={styles.screenSubtitle}>Trung tâm an ninh</Text>
           <Text style={styles.screenTitle}>Thông Báo & Cảnh Báo</Text>
         </View>
 
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 10,
+    paddingTop: 14,
     paddingBottom: 40,
   },
   header: {
@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.md,
   },
   screenSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primaryLight,
-    letterSpacing: 1.2,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
   screenTitle: {
     fontSize: 22,
@@ -208,13 +208,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: SIZES.radiusSm,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: COLORS.dangerMuted,
+    borderWidth: 1,
+    borderColor: COLORS.dangerBorder,
   },
   clearAllText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: COLORS.danger,
   },
   filterRow: {
@@ -223,27 +225,27 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.md,
   },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   filterChipActive: {
     borderColor: COLORS.primary,
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    backgroundColor: COLORS.primary,
   },
   filterChipDanger: {
-    borderColor: COLORS.danger,
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: COLORS.dangerBorder,
+    backgroundColor: COLORS.dangerMuted,
   },
   filterChipWarning: {
-    borderColor: COLORS.warning,
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderColor: COLORS.warningBorder,
+    backgroundColor: COLORS.warningMuted,
   },
   filterText: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     fontWeight: '600',
   },
@@ -260,15 +262,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   demoCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
-    padding: 12,
+    padding: 14,
     marginBottom: SIZES.md,
     borderWidth: 1,
     borderColor: COLORS.border,
+    ...SHADOWS.small,
   },
   demoTitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginBottom: 8,
     fontWeight: '600',
@@ -283,37 +286,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: SIZES.radiusSm,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#CBD5E1',
+    ...SHADOWS.small,
   },
   demoBtnText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },
   emptyBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
-    backgroundColor: COLORS.cardBg,
+    paddingVertical: 48,
+    backgroundColor: '#F0FDF4',
     borderRadius: SIZES.radiusLg,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#BBF7D0',
     paddingHorizontal: 20,
     marginTop: 10,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.textPrimary,
+    color: '#15803D',
     marginTop: 14,
   },
   emptyDesc: {
-    fontSize: 12,
-    color: COLORS.textMuted,
+    fontSize: 13,
+    color: '#166534',
     textAlign: 'center',
     marginTop: 6,
   },
@@ -323,20 +327,21 @@ const styles = StyleSheet.create({
   alertCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd,
-    padding: 12,
+    borderRadius: SIZES.radiusLg,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'flex-start',
     gap: 10,
+    ...SHADOWS.small,
   },
   alertCardDanger: {
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: COLORS.dangerBorder,
+    backgroundColor: '#FEF2F2',
   },
   alertCardWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-    backgroundColor: 'rgba(245, 158, 11, 0.06)',
+    borderColor: COLORS.warningBorder,
+    backgroundColor: '#FFFBEB',
   },
   alertIconCircle: {
     width: 36,
@@ -362,14 +367,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   alertTime: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textMuted,
     marginLeft: 6,
   },
   alertMessage: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   dismissBtn: {
     padding: 4,

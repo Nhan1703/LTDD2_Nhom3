@@ -89,11 +89,11 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
             onPress={() => toggleGate('Bảng điều khiển nhanh')}
             activeOpacity={0.8}
           >
-            <View style={[styles.controlIconBox, { backgroundColor: gateState.isOpen ? 'rgba(245, 158, 11, 0.2)' : 'rgba(139, 92, 246, 0.15)' }]}>
+            <View style={[styles.controlIconBox, { backgroundColor: gateState.isOpen ? COLORS.warningMuted : COLORS.primaryMuted }]}>
               <Ionicons
                 name={gateState.isOpen ? 'lock-open' : 'lock-closed'}
                 size={22}
-                color={gateState.isOpen ? COLORS.warning : COLORS.accent}
+                color={gateState.isOpen ? COLORS.warning : COLORS.primary}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -111,20 +111,20 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
             onPress={toggleLight}
             activeOpacity={0.8}
           >
-            <View style={[styles.controlIconBox, { backgroundColor: isLightOn ? 'rgba(234, 179, 8, 0.25)' : 'rgba(100, 116, 139, 0.15)' }]}>
+            <View style={[styles.controlIconBox, { backgroundColor: isLightOn ? '#FEF9C3' : '#F1F5F9' }]}>
               <Ionicons
                 name={isLightOn ? 'bulb' : 'bulb-outline'}
                 size={22}
-                color={isLightOn ? '#FACC15' : COLORS.textMuted}
+                color={isLightOn ? '#CA8A04' : COLORS.textMuted}
               />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.controlTitle}>Đèn LED (D2)</Text>
-              <Text style={[styles.controlStatus, { color: isLightOn ? '#FACC15' : COLORS.textSecondary }]}>
+              <Text style={[styles.controlStatus, { color: isLightOn ? '#CA8A04' : COLORS.textSecondary }]}>
                 {isLightOn ? 'Bật sáng' : 'Tắt'}
               </Text>
             </View>
-            <Ionicons name="power" size={18} color={isLightOn ? '#FACC15' : COLORS.textMuted} />
+            <Ionicons name="power" size={18} color={isLightOn ? '#CA8A04' : COLORS.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -225,12 +225,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SIZES.lg,
+    paddingTop: 14,
     paddingBottom: 40,
   },
   summaryBar: {
     flexDirection: 'row',
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd,
+    borderRadius: SIZES.radiusLg,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: SIZES.lg,
@@ -245,14 +246,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryNum: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: COLORS.textPrimary,
   },
   summaryLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 2,
+    fontWeight: '500',
   },
   summaryDivider: {
     width: 1,
@@ -268,11 +270,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: SIZES.radiusMd,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: SIZES.radiusLg,
     borderWidth: 1,
-    gap: 10,
+    gap: 12,
     ...SHADOWS.small,
   },
   controlCardNormal: {
@@ -280,27 +282,27 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   controlCardActiveWarning: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderColor: 'rgba(245, 158, 11, 0.4)',
+    backgroundColor: COLORS.warningMuted,
+    borderColor: COLORS.warningBorder,
   },
   controlCardActiveLight: {
-    backgroundColor: 'rgba(234, 179, 8, 0.12)',
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    backgroundColor: '#FEF9C3',
+    borderColor: '#FDE047',
   },
   controlIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   controlTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   controlStatus: {
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 2,
     fontWeight: '600',
   },
@@ -308,45 +310,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderRadius: SIZES.radiusLg,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SIZES.md,
     ...SHADOWS.small,
   },
   rfidIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rfidTitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   rfidUid: {
-    fontSize: 13,
-    color: COLORS.textPrimary,
+    fontSize: 14,
+    color: COLORS.primary,
     fontWeight: '800',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   rfidSub: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   rfidStatusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusSm,
   },
   rfidStatusText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
@@ -354,33 +356,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: SIZES.sm,
+    marginTop: SIZES.md,
     marginBottom: SIZES.sm,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    color: COLORS.textPrimary,
   },
   sectionAction: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.primaryLight,
+    color: COLORS.primary,
   },
   customCount: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   addSensorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    backgroundColor: COLORS.primaryMuted,
     borderRadius: SIZES.radiusLg,
     padding: SIZES.lg,
     borderWidth: 1.5,
-    borderColor: 'rgba(37, 99, 235, 0.35)',
+    borderColor: COLORS.primaryBorder,
     borderStyle: 'dashed',
     marginTop: SIZES.sm,
     gap: 14,
@@ -389,9 +390,10 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    ...SHADOWS.small,
   },
   addTextContainer: {
     flex: 1,
@@ -399,12 +401,12 @@ const styles = StyleSheet.create({
   addTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.textPrimary,
+    color: COLORS.primaryDark,
   },
   addSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 18,
   },
 });

@@ -112,21 +112,21 @@ export default function GenericSensorCard({ sensor }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBg, // Nền trắng chuẩn Modern Light
     borderRadius: SIZES.radiusLg,
     padding: SIZES.lg,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.border, // Viền slate-200 tinh gọn
     marginBottom: SIZES.md,
     ...SHADOWS.small,
   },
   cardWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-    backgroundColor: 'rgba(245, 158, 11, 0.05)',
+    borderColor: 'rgba(217, 119, 6, 0.4)',
+    backgroundColor: '#FFFBEB', // Nền vàng nhạt pastel cảnh báo
   },
   cardDanger: {
-    borderColor: 'rgba(239, 68, 68, 0.6)',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(220, 38, 38, 0.4)',
+    backgroundColor: '#FEF2F2', // Nền đỏ nhạt pastel báo động
   },
   header: {
     flexDirection: 'row',
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   locationText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary, // Tương phản chuẩn WCAG AA
     marginTop: 2,
   },
   rightActions: {
@@ -207,29 +207,31 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.textSecondary,
   },
   rangeText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary, // Đảm bảo độ rõ nét
   },
   progressTrack: {
-    height: 7,
-    backgroundColor: 'rgba(51, 65, 85, 0.5)',
-    borderRadius: 3.5,
+    height: 8,
+    backgroundColor: '#F1F5F9', // Thanh trượt nền sáng thanh lịch
+    borderRadius: 4,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3.5,
+    borderRadius: 4,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   footerText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary, // Khử anti-pattern LOW CONTRAST TEXT
   },
 });

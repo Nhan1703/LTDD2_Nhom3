@@ -26,13 +26,13 @@ export default function GateScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header Info */}
       <View style={styles.header}>
-        <Text style={styles.screenSubtitle}>HỆ THỐNG AN NINH & RA VÀO</Text>
+        <Text style={styles.screenSubtitle}>Hệ thống an ninh & ra vào</Text>
         <Text style={styles.screenTitle}>Kiểm Soát Cổng Tự Động</Text>
       </View>
 
       {/* Main Gate Visual Card */}
       <View style={[styles.gateVisualCard, isOpen ? styles.gateCardOpen : styles.gateCardClosed]}>
-        <View style={[styles.largeIconCircle, { backgroundColor: isOpen ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)' }]}>
+        <View style={[styles.largeIconCircle, { backgroundColor: isOpen ? COLORS.warningMuted : COLORS.successMuted }]}>
           <Ionicons
             name={isOpen ? 'lock-open' : 'lock-closed'}
             size={56}
@@ -41,7 +41,7 @@ export default function GateScreen() {
         </View>
 
         <Text style={styles.gateStatusTitle}>
-          {isOpen ? 'CỔNG ĐANG MỞ' : 'CỔNG ĐÃ KHÓA CHẶT'}
+          {isOpen ? 'Cổng đang mở' : 'Cổng đã khóa chặt'}
         </Text>
         <Text style={styles.gateStatusDesc}>
           {isOpen
@@ -70,10 +70,10 @@ export default function GateScreen() {
       <View style={styles.rfidHardwareCard}>
         <View style={styles.rfidHardwareHeader}>
           <View style={styles.rfidHeaderLeft}>
-            <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primaryLight} />
+            <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primary} />
             <Text style={styles.rfidHardwareTitle}>Đầu đọc thẻ RFID RC522 (ESP32)</Text>
           </View>
-          <View style={[styles.rfidLivePill, { backgroundColor: rfidInfo?.isValid ? COLORS.successMuted : 'rgba(100, 116, 139, 0.2)' }]}>
+          <View style={[styles.rfidLivePill, { backgroundColor: rfidInfo?.isValid ? COLORS.successMuted : '#F1F5F9' }]}>
             <View style={[styles.rfidLiveDot, { backgroundColor: rfidInfo?.isValid ? COLORS.success : COLORS.textMuted }]} />
             <Text style={[styles.rfidLiveText, { color: rfidInfo?.isValid ? COLORS.success : COLORS.textSecondary }]}>
               {rfidInfo?.lastUid ? (rfidInfo.isValid ? 'ĐÃ XÁC THỰC' : 'TỪ CHỐI') : 'CHỜ QUẸT'}
@@ -100,14 +100,14 @@ export default function GateScreen() {
       </View>
 
       {/* Quick Test Methods */}
-      <Text style={styles.sectionHeader}>Phương Thức Mở Nhanh (Mô Phỏng Thực Tế)</Text>
+      <Text style={styles.sectionHeader}>Phương thức mở nhanh (Mô phỏng thực tế)</Text>
       <View style={styles.quickMethodsRow}>
         <TouchableOpacity
           style={styles.quickMethodBtn}
           onPress={() => toggleGate('Quẹt thẻ RFID')}
           activeOpacity={0.7}
         >
-          <Ionicons name="card-outline" size={22} color={COLORS.primaryLight} />
+          <Ionicons name="card-outline" size={22} color={COLORS.primary} />
           <Text style={styles.quickMethodText}>Quẹt thẻ RFID</Text>
         </TouchableOpacity>
 
@@ -116,7 +116,7 @@ export default function GateScreen() {
           onPress={() => toggleGate('Nút bấm cơ học')}
           activeOpacity={0.7}
         >
-          <Ionicons name="radioButtonOn" size={22} color={COLORS.secondaryLight} />
+          <Ionicons name="radio-button-on" size={22} color={COLORS.secondary} />
           <Text style={styles.quickMethodText}>Nút bấm tường</Text>
         </TouchableOpacity>
       </View>
@@ -222,10 +222,10 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.md,
   },
   screenSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primaryLight,
-    letterSpacing: 1.2,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
   screenTitle: {
     fontSize: 22,
@@ -235,23 +235,24 @@ const styles = StyleSheet.create({
   },
   gateVisualCard: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusXl,
+    borderRadius: SIZES.radiusLg,
     padding: SIZES.xl,
     alignItems: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     marginBottom: SIZES.lg,
-    ...SHADOWS.medium,
+    ...SHADOWS.small,
   },
   gateCardOpen: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
+    borderColor: COLORS.warningBorder,
   },
   gateCardClosed: {
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: COLORS.border,
   },
   largeIconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -261,15 +262,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.textPrimary,
     marginBottom: 6,
-    letterSpacing: 0.5,
   },
   gateStatusDesc: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
     paddingHorizontal: 20,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   bigGateBtn: {
     flexDirection: 'row',
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   btnOpenState: {
-    backgroundColor: '#DC2626',
+    backgroundColor: COLORS.danger,
   },
   bigGateBtnText: {
     color: COLORS.white,
@@ -294,8 +294,8 @@ const styles = StyleSheet.create({
   },
   rfidHardwareCard: {
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd,
-    padding: 12,
+    borderRadius: SIZES.radiusLg,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SIZES.md,
@@ -313,48 +313,49 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rfidHardwareTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   rfidLivePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusFull,
-    gap: 5,
+    gap: 6,
   },
   rfidLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   rfidLiveText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
   rfidGridRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.6)',
+    borderColor: COLORS.border,
   },
   rfidCol: {
     alignItems: 'center',
     flex: 1,
   },
   rfidColLabel: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginBottom: 2,
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 3,
+    fontWeight: '500',
   },
   rfidColValue: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primaryLight,
+    color: COLORS.primary,
   },
   rfidColDivider: {
     width: 1,
@@ -362,31 +363,30 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
   },
   sectionHeader: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '700',
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: COLORS.textPrimary,
     marginBottom: SIZES.sm,
   },
   quickMethodsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     marginBottom: SIZES.lg,
   },
   quickMethodBtn: {
     flex: 1,
     backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
+    borderRadius: SIZES.radiusLg,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
+    ...SHADOWS.small,
   },
   quickMethodText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.textPrimary,
     textAlign: 'center',
@@ -398,6 +398,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SIZES.lg,
+    ...SHADOWS.small,
   },
   configHeader: {
     flexDirection: 'row',
@@ -410,8 +411,8 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   configSubtitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
+    fontSize: 13,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   switchToggle: {
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   switchOff: {
-    backgroundColor: 'rgba(51, 65, 85, 0.8)',
+    backgroundColor: '#CBD5E1',
   },
   switchThumb: {
     width: 22,
@@ -445,9 +446,10 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
   },
   delayLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginBottom: 8,
+    fontWeight: '500',
   },
   delayChipsRow: {
     flexDirection: 'row',
@@ -457,17 +459,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: SIZES.radiusSm,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   delayChipActive: {
     borderColor: COLORS.primary,
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    backgroundColor: COLORS.primary,
   },
   delayChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.textSecondary,
   },
@@ -479,10 +481,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: SIZES.sm,
   },
   logCountText: {
-    fontSize: 12,
-    color: COLORS.textMuted,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   logsList: {
     backgroundColor: COLORS.cardBg,
@@ -490,13 +494,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     overflow: 'hidden',
+    ...SHADOWS.small,
   },
   logItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.4)',
+    borderBottomColor: '#F1F5F9',
   },
   logDot: {
     width: 8,
@@ -513,7 +518,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   logMethod: {
-    fontSize: 11,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
@@ -521,12 +526,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   logTime: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },
   logDate: {
-    fontSize: 10,
+    fontSize: 11,
     color: COLORS.textMuted,
     marginTop: 1,
   },

@@ -108,7 +108,7 @@ export default function TempHumidityCard({ tempSensor, humSensor }) {
 
       {/* Comfort Index Summary */}
       <View style={styles.summaryBar}>
-        <Ionicons name="leaf-outline" size={15} color={COLORS.success} />
+        <Ionicons name="leaf-outline" size={16} color="#15803D" />
         <Text style={styles.summaryText}>
           Chỉ số tiện nghi: {tempVal > 32 ? 'Nóng bức, nên bật điều hòa' : tempVal < 22 ? 'Hơi se lạnh' : 'Nhiệt độ & độ ẩm rất lý tưởng'}
         </Text>
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: COLORS.dangerMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -153,25 +153,26 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   locationText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginTop: 2,
+    fontWeight: '500',
   },
   testBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: SIZES.radiusSm,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: COLORS.dangerBorder,
+    backgroundColor: COLORS.dangerMuted,
   },
   testBtnText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.temperature,
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.danger,
   },
   gaugesRow: {
     flexDirection: 'row',
@@ -179,17 +180,19 @@ const styles = StyleSheet.create({
   },
   gaugeBox: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.6)',
+    borderColor: '#E2E8F0',
   },
   gaugeBoxWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
+    borderColor: COLORS.warningBorder,
+    backgroundColor: COLORS.warningMuted,
   },
   gaugeBoxDanger: {
-    borderColor: 'rgba(239, 68, 68, 0.6)',
+    borderColor: COLORS.dangerBorder,
+    backgroundColor: COLORS.dangerMuted,
   },
   gaugeHeader: {
     flexDirection: 'row',
@@ -198,9 +201,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   gaugeLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   gaugeValueRow: {
     flexDirection: 'row',
@@ -208,19 +211,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   gaugeValue: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
     color: COLORS.textPrimary,
   },
   gaugeUnit: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: COLORS.textSecondary,
     marginLeft: 3,
   },
   miniBar: {
     height: 6,
-    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+    backgroundColor: '#E2E8F0',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 8,
@@ -230,25 +233,26 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   gaugeStatus: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginTop: SIZES.md,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#F0FDF4',
     borderRadius: SIZES.radiusSm,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: '#BBF7D0',
   },
   summaryText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
+    fontSize: 13,
+    color: '#166534',
+    fontWeight: '600',
     flex: 1,
   },
 });

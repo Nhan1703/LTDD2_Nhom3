@@ -44,7 +44,7 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
               onPress={onOpenAddModal}
               activeOpacity={0.7}
             >
-              <Ionicons name="add" size={22} color={COLORS.white} />
+              <Ionicons name="add" size={22} color={COLORS.textPrimary} />
             </TouchableOpacity>
           )}
 
@@ -55,7 +55,7 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
               onPress={onOpenSettings}
               activeOpacity={0.7}
             >
-              <Ionicons name="settings-outline" size={18} color={COLORS.white} />
+              <Ionicons name="settings-outline" size={18} color={COLORS.textPrimary} />
             </TouchableOpacity>
           )}
 
@@ -66,7 +66,7 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
               onPress={onOpenAlerts}
               activeOpacity={0.7}
             >
-              <Ionicons name="notifications-outline" size={20} color={COLORS.white} />
+              <Ionicons name="notifications-outline" size={20} color={COLORS.textPrimary} />
               {unreadAlerts > 0 && (
                 <View style={styles.alertBadge}>
                   <Text style={styles.alertBadgeText}>
@@ -85,9 +85,12 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 10,
+    paddingTop: 12,
     paddingBottom: 14,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardBg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    ...SHADOWS.small,
   },
   topRow: {
     flexDirection: 'row',
@@ -98,10 +101,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primaryLight,
-    letterSpacing: 1.2,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   title: {
@@ -121,38 +124,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBgHover,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   badgeActive: {
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: COLORS.warningBorder,
+    backgroundColor: COLORS.warningMuted,
   },
   badgeConnected: {
-    borderColor: COLORS.successMuted,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: COLORS.successBorder,
+    backgroundColor: COLORS.successMuted,
   },
   badgeInactive: {
-    borderColor: 'rgba(239, 68, 68, 0.3)',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: COLORS.dangerBorder,
+    backgroundColor: COLORS.dangerMuted,
   },
   statusDot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     marginRight: 6,
   },
   badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
   },
   iconButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBgHover,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -171,11 +174,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: COLORS.background,
+    borderColor: COLORS.cardBg,
   },
   alertBadgeText: {
     color: COLORS.white,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
   },
 });

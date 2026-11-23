@@ -58,7 +58,7 @@ function MainApp() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" backgroundColor={COLORS.background} />
+      <StatusBar style="dark" backgroundColor={COLORS.background} />
 
       {/* Main Content Area */}
       <View style={styles.contentArea}>{renderScreen()}</View>
@@ -78,7 +78,7 @@ function MainApp() {
                 <Ionicons
                   name={isActive ? tab.activeIcon : tab.icon}
                   size={22}
-                  color={isActive ? COLORS.primaryLight : COLORS.textMuted}
+                  color={isActive ? COLORS.primary : COLORS.textMuted}
                 />
                 {tab.badge && (
                   <View style={[styles.tabBadge, { backgroundColor: tab.badgeColor || COLORS.danger }]}>
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.cardBg,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+    paddingVertical: 10,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
     ...SHADOWS.medium,
   },
   tabItem: {
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabLabel: {
-    fontSize: 10,
-    marginTop: 3,
+    fontSize: 12,
+    marginTop: 4,
     fontWeight: '600',
   },
   tabLabelActive: {
-    color: COLORS.primaryLight,
+    color: COLORS.primary,
     fontWeight: '700',
   },
   tabLabelInactive: {
@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
   },
   tabBadgeText: {
     color: COLORS.white,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
   },
 });

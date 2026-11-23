@@ -20,7 +20,7 @@ export default function SoundSensorCard({ sensor }) {
     <View style={[styles.card, isLoud && (isAlarm ? styles.cardDanger : styles.cardWarning)]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={[styles.iconBox, { backgroundColor: isAlarm ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)' }]}>
+          <View style={[styles.iconBox, { backgroundColor: isAlarm ? '#FEE2E2' : '#FEF3C7' }]}>
             <Ionicons
               name={isAlarm ? 'volume-high' : 'volume-medium'}
               size={22}
@@ -78,7 +78,7 @@ export default function SoundSensorCard({ sensor }) {
                   styles.eqBar,
                   {
                     height: 12 + index * 2.5,
-                    backgroundColor: isActive ? barColor : 'rgba(51, 65, 85, 0.4)',
+                    backgroundColor: isActive ? barColor : '#E2E8F0',
                   },
                 ]}
               />
@@ -119,7 +119,7 @@ export default function SoundSensorCard({ sensor }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBg, // Nền trắng sáng
     borderRadius: SIZES.radiusLg,
     padding: SIZES.lg,
     borderWidth: 1,
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.small,
   },
   cardWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-    backgroundColor: 'rgba(245, 158, 11, 0.05)',
+    borderColor: 'rgba(217, 119, 6, 0.4)',
+    backgroundColor: '#FFFBEB',
   },
   cardDanger: {
-    borderColor: 'rgba(239, 68, 68, 0.6)',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(220, 38, 38, 0.4)',
+    backgroundColor: '#FEF2F2',
   },
   header: {
     flexDirection: 'row',
@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   locationText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   statusPill: {
@@ -206,11 +206,11 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.textSecondary,
   },
   levelSubtext: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
     maxWidth: 220,
@@ -223,11 +223,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: SIZES.radiusSm,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: '#FDE68A',
+    backgroundColor: '#FFFBEB',
   },
   testBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: COLORS.sound,
   },
@@ -236,10 +236,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     height: 38,
-    paddingHorizontal: 4,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    paddingHorizontal: 6,
+    backgroundColor: '#F8FAFC', // Nền equalizer sáng nhã nhặn
     borderRadius: SIZES.radiusSm,
     paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   eqBar: {
     flex: 1,
@@ -251,8 +253,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   footerText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
   },
   lightBadge: {
     flexDirection: 'row',
@@ -265,12 +267,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   lightOnBadge: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.5)',
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FCD34D',
   },
   lightOffBadge: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderColor: 'rgba(51, 65, 85, 0.4)',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   lightBadgeText: {
     fontSize: 12,
@@ -290,14 +292,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.warning,
   },
   togglePillInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E2E8F0',
   },
   togglePillText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
   },
   togglePillTextActive: {
-    color: '#0f172a',
+    color: '#FFFFFF',
   },
 });

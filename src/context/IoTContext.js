@@ -45,6 +45,8 @@ export const IoTProvider = ({ children }) => {
   });
 
   const autoCloseTimerRef = useRef(null);
+  // Khóa thời gian chống giật trạng thái khi người dùng thao tác đóng/mở cổng
+  const lastGateToggleTimeRef = useRef(0);
 
   // Tải trạng thái đã lưu trữ từ bộ nhớ LocalStorage trên trình duyệt / điện thoại khi mở ứng dụng
   useEffect(() => {
@@ -269,8 +271,12 @@ export const IoTProvider = ({ children }) => {
           });
 
           // Đồng bộ trạng thái cổng đóng/mở từ ESP32 / Firebase
+          // Áp dụng khóa chống giật (Lock 4.5 giây): Bỏ qua dữ liệu cũ từ Cloud ngay sau khi người dùng bấm nút
           if (data.gate !== undefined) {
-            setGateState(prev => (prev.isOpen !== Boolean(data.gate) ? { ...prev, isOpen: Boolean(data.gate) } : prev));
+            const timeSinceToggle = Date.now() - lastGateToggleTimeRef.current;
+            if (timeSinceToggle > 4500) {
+              setGateState(prev => (prev.isOpen !== Boolean(data.gate) ? { ...prev, isOpen: Boolean(data.gate) } : prev));
+            }
           }
         } else {
           setIsHardwareConnected(false);
@@ -349,6 +355,8 @@ export const IoTProvider = ({ children }) => {
 
   // Điều khiển ĐÓNG / MỞ CỔNG từ App / Web
   const toggleGate = (method = 'Điều khiển qua Web / App') => {
+    // Đánh dấu mốc thời gian người dùng vừa bấm nút để kích hoạt khóa chống giật
+    lastGateToggleTimeRef.current = Date.now();
     const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const willBeOpen = !gateState.isOpen;
 
@@ -439,14 +447,14 @@ export const IoTProvider = ({ children }) => {
           body: JSON.stringify({ gate: willBeOpen }),
         }).catch(err => console.log('Firebase gate command error:', err));
 
-        // Tự động giải phóng lệnh sau 2 giây để tránh kẹt trạng thái trên Cloud gây lặp vô tận
+        // Tự động giải phóng lệnh sau 800ms để tránh kẹt trạng thái trên Cloud gây lặp vô tận
         setTimeout(() => {
           fetch(`${fbUrl}/smart_home/commands.json`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ gate: null }),
           }).catch(() => {});
-        }, 2000);
+        }, 800);
       }
     } catch (e) {}
 

@@ -13,11 +13,11 @@ export default function GateControlCard({ onNavigateToGate }) {
       {/* Top Header */}
       <View style={styles.header}>
         <View style={styles.titleArea}>
-          <View style={[styles.iconCircle, { backgroundColor: isOpen ? COLORS.warningMuted : 'rgba(139, 92, 246, 0.15)' }]}>
+          <View style={[styles.iconCircle, { backgroundColor: isOpen ? COLORS.warningMuted : COLORS.primaryMuted }]}>
             <Ionicons
               name={isOpen ? 'lock-open' : 'lock-closed'}
               size={24}
-              color={isOpen ? COLORS.warning : COLORS.accent}
+              color={isOpen ? COLORS.warning : COLORS.primary}
             />
           </View>
           <View>
@@ -91,10 +91,10 @@ const styles = StyleSheet.create({
     ...SHADOWS.small,
   },
   cardOpen: {
-    borderColor: 'rgba(245, 158, 11, 0.4)',
+    borderColor: COLORS.warningBorder,
   },
   cardClosed: {
-    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderColor: COLORS.border,
   },
   header: {
     flexDirection: 'row',
@@ -121,8 +121,9 @@ const styles = StyleSheet.create({
   },
   lastActionText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     marginTop: 2,
+    fontWeight: '500',
   },
   badge: {
     paddingHorizontal: 10,
@@ -152,23 +153,24 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    backgroundColor: '#F8FAFC',
     padding: SIZES.md,
     borderRadius: SIZES.radiusMd,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: '#E2E8F0',
   },
   infoCol: {
     flex: 1,
   },
   infoLabel: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginBottom: 4,
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   actionBtn: {
@@ -184,7 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   actionBtnClose: {
-    backgroundColor: '#DC2626',
+    backgroundColor: COLORS.danger,
   },
   actionBtnText: {
     color: COLORS.white,
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
   },
   detailLinkText: {
     fontSize: 13,
-    color: COLORS.accent,
+    color: COLORS.primary,
     fontWeight: '600',
   },
 });

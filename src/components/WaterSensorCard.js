@@ -15,7 +15,7 @@ export default function WaterSensorCard({ sensor }) {
     <View style={[styles.card, isLeak && (isDanger ? styles.cardDanger : styles.cardWarning)]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={[styles.iconBox, { backgroundColor: isLeak ? 'rgba(239, 68, 68, 0.2)' : 'rgba(2, 132, 199, 0.2)' }]}>
+          <View style={[styles.iconBox, { backgroundColor: isLeak ? '#FEE2E2' : '#E0F2FE' }]}>
             <Ionicons
               name={isLeak ? 'warning' : 'water'}
               size={22}
@@ -90,7 +90,7 @@ export default function WaterSensorCard({ sensor }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.cardBg, // Nền trắng sáng
     borderRadius: SIZES.radiusLg,
     padding: SIZES.lg,
     borderWidth: 1,
@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.small,
   },
   cardWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-    backgroundColor: 'rgba(245, 158, 11, 0.05)',
+    borderColor: 'rgba(217, 119, 6, 0.4)',
+    backgroundColor: '#FFFBEB',
   },
   cardDanger: {
-    borderColor: 'rgba(239, 68, 68, 0.6)',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(220, 38, 38, 0.4)',
+    backgroundColor: '#FEF2F2',
   },
   header: {
     flexDirection: 'row',
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   locationText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   statusPill: {
@@ -177,11 +177,11 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.textSecondary,
   },
   levelSubtext: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
@@ -195,22 +195,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   testBtnTrigger: {
-    borderColor: 'rgba(2, 132, 199, 0.4)',
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderColor: '#BAE6FD',
+    backgroundColor: '#F0F9FF',
   },
   testBtnReset: {
     borderColor: COLORS.border,
-    backgroundColor: 'rgba(51, 65, 85, 0.4)',
+    backgroundColor: '#F1F5F9',
   },
   testBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   progressTrack: {
     height: 8,
-    backgroundColor: 'rgba(51, 65, 85, 0.5)',
+    backgroundColor: '#F1F5F9',
     borderRadius: 4,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   progressFill: {
     height: '100%',
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   thresholdText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    fontSize: 12,
+    color: COLORS.textSecondary,
   },
 });
