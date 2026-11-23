@@ -8,25 +8,29 @@ export default function GateScreen() {
   const { gateState, toggleGate, updateGateMode, rfidInfo, clearGateLogs, triggerSimulationEvent } = useIoT();
   const isOpen = gateState.isOpen;
 
+  // Thời gian đếm ngược đóng cổng tự động
   const [selectedDelay, setSelectedDelay] = useState(gateState.autoCloseDelaySec || 10);
+  // Trạng thái mở rộng danh sách nhật ký
   const [showAllLogs, setShowAllLogs] = useState(false);
 
   const delays = [5, 10, 15, 30, 60];
 
+  // Cập nhật khoảng thời gian chờ đóng cổng
   const handleSelectDelay = (sec) => {
     setSelectedDelay(sec);
     updateGateMode('Auto-Close', sec);
   };
 
+  // Bật/tắt chế độ tự động đóng cổng
   const handleToggleAutoClose = () => {
     const newMode = gateState.mode === 'Auto-Close' ? 'Manual' : 'Auto-Close';
     updateGateMode(newMode, selectedDelay);
   };
 
-  // Xác nhận dọn dẹp toàn bộ nhật ký đóng mở cổng
+  // Xác nhận dọn sạch toàn bộ nhật ký đóng mở cổng
   const handleClearLogs = () => {
     if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm('Bạn có muốn xóa toàn bộ lịch sử nhật ký đóng/mở cổng không?') : true;
+      const ok = typeof window !== 'undefined' ? window.confirm('Bạn có muốn xóa toàn bộ lịch sử đóng/mở cổng không?') : true;
       if (ok && clearGateLogs) {
         clearGateLogs();
       }
@@ -48,16 +52,15 @@ export default function GateScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.responsiveWrapper}>
-        {/* Header màn hình kiểm soát cổng */}
+        {/* Tiêu đề ngắn gọn, không chữ dư thừa */}
         <View style={styles.header}>
-          <Text style={styles.screenSubtitle}>Hệ thống an ninh & ra vào</Text>
-          <Text style={styles.screenTitle}>Kiểm Soát Cổng Tự Động</Text>
+          <Text style={styles.screenTitle}>Kiểm Soát Cổng</Text>
         </View>
 
-        {/* Thẻ Trực Quan Trạng Thái Cổng Chính */}
+        {/* Khối trực quan trạng thái cổng chính */}
         <View style={[styles.gateVisualCard, isOpen ? styles.gateCardOpen : styles.gateCardClosed]}>
           <View style={styles.hardwareBadgeRow}>
-            <Text style={styles.hardwareTag}>Phần cứng: Servo SG90 (GPIO 13) • Góc quay: {isOpen ? '90° (Mở)' : '0° (Khóa)'}</Text>
+            <Text style={styles.hardwareTag}>Servo SG90 • GPIO 13 • {isOpen ? 'Góc 90° (Mở)' : 'Góc 0° (Khóa)'}</Text>
           </View>
 
           <View
@@ -74,37 +77,37 @@ export default function GateScreen() {
           </View>
 
           <Text style={styles.gateStatusTitle}>
-            {isOpen ? 'CỔNG ĐANG MỞ RA VÀO' : 'CỔNG ĐÃ KHÓA AN TOÀN'}
+            {isOpen ? 'CỔNG ĐANG MỞ' : 'CỔNG ĐÃ KHÓA AN TOÀN'}
           </Text>
           <Text style={styles.gateStatusDesc}>
             {isOpen
-              ? 'Mô-tơ Servo đang quay 90° để mở cổng. Hệ thống đang đếm ngược thời gian tự động khóa.'
-              : 'Chốt điện tử Servo 0° đang khóa chốt an toàn tuyệt đối. Cần thẻ RFID hoặc App để mở.'}
+              ? 'Đang mở • Chờ tự động đóng hoặc nhấn nút để khóa'
+              : 'Đang khóa an toàn • Dùng thẻ RFID hoặc nhấn nút để mở'}
           </Text>
 
-          {/* Nút Hành Động Lớn Mở / Đóng Cổng */}
+          {/* Nút điều khiển Mở / Đóng cổng */}
           <TouchableOpacity
             style={[styles.bigGateBtn, isOpen ? styles.btnOpenState : styles.btnCloseState]}
-            onPress={() => toggleGate(isOpen ? 'Đóng qua Web/App' : 'Mở qua Web/App')}
+            onPress={() => toggleGate(isOpen ? 'Đóng qua App/Web' : 'Mở qua App/Web')}
             activeOpacity={0.8}
           >
             <Ionicons
               name={isOpen ? 'close-circle' : 'key'}
-              size={24}
+              size={22}
               color={COLORS.white}
             />
             <Text style={styles.bigGateBtnText}>
-              {isOpen ? 'Nhấn để Đóng & Khóa Cổng' : 'Nhấn để Mở Cổng Ra Vào'}
+              {isOpen ? 'Nhấn để Khóa Cổng' : 'Nhấn để Mở Cổng'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Thẻ Giám Sát Đầu Đọc Thẻ RFID RC522 Thực Tế */}
+        {/* Thẻ hiển thị trạng thái đầu đọc thẻ RFID */}
         <View style={styles.rfidHardwareCard}>
           <View style={styles.rfidHardwareHeader}>
             <View style={styles.rfidHeaderLeft}>
               <Ionicons name="hardware-chip-outline" size={18} color={COLORS.gate} />
-              <Text style={styles.rfidHardwareTitle}>Đầu đọc thẻ RFID RC522 (Giao tiếp SPI ESP32)</Text>
+              <Text style={styles.rfidHardwareTitle}>Đầu đọc thẻ RFID RC522</Text>
             </View>
             <View
               style={[
@@ -131,26 +134,26 @@ export default function GateScreen() {
 
           <View style={styles.rfidGridRow}>
             <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thẻ vừa quét gần nhất</Text>
-              <Text style={styles.rfidColValue}>{rfidInfo?.lastUid || 'Chưa có lượt quét'}</Text>
+              <Text style={styles.rfidColLabel}>Thẻ vừa quét</Text>
+              <Text style={styles.rfidColValue}>{rfidInfo?.lastUid || 'Chưa có'}</Text>
             </View>
             <View style={styles.rfidColDivider} />
             <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thẻ Master hệ thống</Text>
+              <Text style={styles.rfidColLabel}>Thẻ Master</Text>
               <Text style={[styles.rfidColValue, { color: COLORS.gate }]}>
                 {rfidInfo?.masterUid || '620F0307'}
               </Text>
             </View>
             <View style={styles.rfidColDivider} />
             <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thời gian quét</Text>
+              <Text style={styles.rfidColLabel}>Thời gian</Text>
               <Text style={styles.rfidColValue}>{rfidInfo?.lastScanTime || 'Vừa xong'}</Text>
             </View>
           </View>
         </View>
 
-        {/* Phương Thức Mở Nhanh & Mô Phỏng Tình Huống Thực Tế */}
-        <Text style={styles.sectionHeader}>Phương thức mở nhanh (Mô phỏng thực tế)</Text>
+        {/* Các nút mở nhanh */}
+        <Text style={styles.sectionHeader}>Mở nhanh</Text>
         <View style={styles.quickMethodsRow}>
           <TouchableOpacity
             style={styles.quickMethodBtn}
@@ -161,8 +164,8 @@ export default function GateScreen() {
               <Ionicons name="card" size={20} color={COLORS.primary} />
             </View>
             <View>
-              <Text style={styles.quickMethodText}>Quẹt thẻ Master</Text>
-              <Text style={styles.quickMethodSub}>Thẻ hợp lệ (620F0307)</Text>
+              <Text style={styles.quickMethodText}>Thẻ Master</Text>
+              <Text style={styles.quickMethodSub}>Hợp lệ (620F0307)</Text>
             </View>
           </TouchableOpacity>
 
@@ -176,7 +179,7 @@ export default function GateScreen() {
             </View>
             <View>
               <Text style={styles.quickMethodText}>Nút bấm tường</Text>
-              <Text style={styles.quickMethodSub}>Nút bấm trong nhà</Text>
+              <Text style={styles.quickMethodSub}>Nút bấm cơ</Text>
             </View>
           </TouchableOpacity>
 
@@ -192,20 +195,20 @@ export default function GateScreen() {
             </View>
             <View>
               <Text style={styles.quickMethodText}>Thẻ lạ đột nhập</Text>
-              <Text style={styles.quickMethodSub}>Từ chối & còi hú</Text>
+              <Text style={styles.quickMethodSub}>Còi hú báo động</Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Cấu Hình Tự Động Đóng Cổng */}
+        {/* Thiết lập tự động đóng cổng */}
         <View style={styles.configCard}>
           <View style={styles.configHeader}>
             <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.configTitle}>Tự động đóng cổng (Auto-Close)</Text>
+              <Text style={styles.configTitle}>Tự động đóng cổng</Text>
               <Text style={styles.configSubtitle}>
                 {gateState.mode === 'Auto-Close'
-                  ? `Đang bật: Cổng tự động đếm ngược đóng lại sau ${selectedDelay} giây`
-                  : 'Đang tắt: Cổng chỉ đóng khi bạn bấm nút hoặc quẹt thẻ lại'}
+                  ? `Đang bật (tự đóng sau ${selectedDelay} giây)`
+                  : 'Đang tắt (chỉ đóng thủ công)'}
               </Text>
             </View>
 
@@ -228,7 +231,7 @@ export default function GateScreen() {
 
           {gateState.mode === 'Auto-Close' && (
             <View style={styles.delaySelectorArea}>
-              <Text style={styles.delayLabel}>Thời gian chờ tự động đóng:</Text>
+              <Text style={styles.delayLabel}>Thời gian chờ đóng:</Text>
               <View style={styles.delayChipsRow}>
                 {delays.map(sec => (
                   <TouchableOpacity
@@ -246,7 +249,7 @@ export default function GateScreen() {
                         selectedDelay === sec && styles.delayChipTextActive,
                       ]}
                     >
-                      {sec} giây
+                      {sec}s
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -255,11 +258,11 @@ export default function GateScreen() {
           )}
         </View>
 
-        {/* Nhật Ký Đóng / Mở Cổng Ra Vào */}
+        {/* Nhật ký đóng mở cổng */}
         <View style={styles.logSectionHeader}>
           <View>
-            <Text style={styles.sectionHeader}>Nhật Ký Đóng / Mở Cổng</Text>
-            <Text style={styles.logCountText}>Tổng cộng {allLogs.length} lượt đóng mở đã ghi nhận</Text>
+            <Text style={styles.sectionHeader}>Nhật Ký Đóng / Mở</Text>
+            <Text style={styles.logCountText}>{allLogs.length} lượt ghi nhận</Text>
           </View>
 
           <View style={styles.logHeaderActions}>
@@ -286,7 +289,7 @@ export default function GateScreen() {
           </View>
         </View>
 
-        {/* Danh Sách Các Lần Đóng Mở Cổng */}
+        {/* Danh sách nhật ký */}
         <View style={styles.logsList}>
           {allLogs.length === 0 ? (
             <View style={styles.emptyLogsBox}>
@@ -306,7 +309,7 @@ export default function GateScreen() {
                   />
                   <View style={styles.logDetails}>
                     <Text style={styles.logAction}>{log.action}</Text>
-                    <Text style={styles.logMethod}>Phương thức: {log.method}</Text>
+                    <Text style={styles.logMethod}>{log.method}</Text>
                   </View>
                   <View style={styles.logTimeCol}>
                     <Text style={styles.logTime}>{log.time}</Text>
@@ -325,7 +328,7 @@ export default function GateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background, // Nền xám tuyết hiện đại #F8FAFC
+    backgroundColor: COLORS.background,
   },
   content: {
     paddingHorizontal: SIZES.lg,
@@ -334,23 +337,16 @@ const styles = StyleSheet.create({
   },
   responsiveWrapper: {
     width: '100%',
-    maxWidth: 960, // Căn giữa tối ưu trên màn hình Web Desktop
+    maxWidth: 960,
     alignSelf: 'center',
   },
   header: {
     marginBottom: SIZES.md,
   },
-  screenSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.5,
-  },
   screenTitle: {
     fontSize: 24,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginTop: 2,
   },
   gateVisualCard: {
     backgroundColor: COLORS.cardBg,
@@ -385,40 +381,40 @@ const styles = StyleSheet.create({
     borderColor: '#BFDBFE',
   },
   largeIconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   gateStatusTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginBottom: 6,
+    marginBottom: 4,
     textAlign: 'center',
   },
   gateStatusDesc: {
     fontSize: 13,
     color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
     paddingHorizontal: 16,
-    lineHeight: 19,
-    maxWidth: 540,
+    lineHeight: 18,
+    maxWidth: 520,
   },
   bigGateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     width: '100%',
-    maxWidth: 420,
-    paddingVertical: 15,
-    borderRadius: SIZES.radiusLg,
+    maxWidth: 380,
+    paddingVertical: 13,
+    borderRadius: SIZES.radiusMd,
     ...SHADOWS.small,
   },
   btnCloseState: {
@@ -435,17 +431,17 @@ const styles = StyleSheet.create({
   rfidHardwareCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.lg,
+    marginBottom: SIZES.md,
     ...SHADOWS.small,
   },
   rfidHardwareHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   rfidHeaderLeft: {
     flexDirection: 'row',
@@ -460,15 +456,15 @@ const styles = StyleSheet.create({
   rfidLivePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
     borderRadius: SIZES.radiusFull,
-    gap: 6,
+    gap: 5,
   },
   rfidLiveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   rfidLiveText: {
     fontSize: 10,
@@ -478,7 +474,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderColor: '#F1F5F9',
   },
@@ -489,7 +485,7 @@ const styles = StyleSheet.create({
   rfidColLabel: {
     fontSize: 11,
     color: COLORS.textSecondary,
-    marginBottom: 3,
+    marginBottom: 2,
     fontWeight: '500',
   },
   rfidColValue: {
@@ -499,39 +495,39 @@ const styles = StyleSheet.create({
   },
   rfidColDivider: {
     width: 1,
-    height: 24,
+    height: 22,
     backgroundColor: '#E2E8F0',
   },
   sectionHeader: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 4,
   },
   quickMethodsRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: SIZES.lg,
+    gap: 8,
+    marginBottom: SIZES.md,
     flexWrap: 'wrap',
   },
   quickMethodBtn: {
     flex: 1,
-    minWidth: 140,
+    minWidth: 130,
     flexDirection: 'row',
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
     ...SHADOWS.small,
   },
   methodIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -548,10 +544,10 @@ const styles = StyleSheet.create({
   configCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.lg,
+    marginBottom: SIZES.md,
     ...SHADOWS.small,
   },
   configHeader: {
@@ -560,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   configTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
@@ -568,13 +564,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 2,
-    lineHeight: 17,
   },
   switchToggle: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    padding: 3,
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    padding: 2,
   },
   switchOn: {
     backgroundColor: COLORS.primary,
@@ -589,32 +584,32 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   switchThumbOn: {
-    transform: [{ translateX: 20 }],
+    transform: [{ translateX: 18 }],
   },
   switchThumbOff: {
     transform: [{ translateX: 0 }],
   },
   delaySelectorArea: {
-    marginTop: SIZES.md,
-    paddingTop: SIZES.md,
+    marginTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
   delayLabel: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginBottom: 8,
+    marginBottom: 6,
     fontWeight: '600',
   },
   delayChipsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     flexWrap: 'wrap',
   },
   delayChip: {
     flex: 1,
-    minWidth: 55,
-    paddingVertical: 8,
+    minWidth: 48,
+    paddingVertical: 6,
     borderRadius: SIZES.radiusSm,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
@@ -638,17 +633,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginBottom: SIZES.sm,
+    marginBottom: 8,
     gap: 8,
   },
   logCountText: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
   logHeaderActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     alignItems: 'center',
   },
   expandLogBtn: {
@@ -687,8 +682,8 @@ const styles = StyleSheet.create({
   emptyLogsBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
-    gap: 8,
+    paddingVertical: 28,
+    gap: 6,
   },
   emptyLogsText: {
     fontSize: 13,
@@ -697,7 +692,7 @@ const styles = StyleSheet.create({
   logItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -705,26 +700,26 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 12,
+    marginRight: 10,
   },
   logDetails: {
     flex: 1,
   },
   logAction: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   logMethod: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
   },
   logTimeCol: {
     alignItems: 'flex-end',
   },
   logTime: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },

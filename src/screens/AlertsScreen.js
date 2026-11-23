@@ -16,27 +16,27 @@ export default function AlertsScreen() {
   const { alerts, clearAlerts, dismissAlert, triggerSimulationEvent } = useIoT();
   const [filter, setFilter] = useState('all'); // all | danger | warning | info
 
-  // Phân loại số lượng thông báo theo từng mức độ nghiêm trọng
+  // Thống kê số lượng từng loại thông báo
   const dangerCount = alerts.filter(a => a.type === 'danger').length;
   const warningCount = alerts.filter(a => a.type === 'warning').length;
   const infoCount = alerts.filter(a => a.type === 'info').length;
 
-  // Lọc danh sách theo bộ lọc đang chọn
+  // Lọc thông báo theo danh mục
   const filteredAlerts = alerts.filter(a => {
     if (filter === 'all') return true;
     return a.type === filter;
   });
 
-  // Hộp thoại xác nhận xóa toàn bộ thông báo
+  // Hộp thoại xác nhận xóa tất cả thông báo
   const confirmClearAll = () => {
     if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử thông báo không?') : true;
+      const ok = typeof window !== 'undefined' ? window.confirm('Bạn có chắc chắn muốn xóa toàn bộ thông báo không?') : true;
       if (ok) {
         clearAlerts();
       }
     } else {
       Alert.alert(
-        'Xóa lịch sử thông báo',
+        'Xóa thông báo',
         'Bạn có chắc chắn muốn xóa toàn bộ danh sách thông báo không?',
         [
           { text: 'Hủy', style: 'cancel' },
@@ -46,11 +46,10 @@ export default function AlertsScreen() {
     }
   };
 
-  // Dọn dẹp nhanh các thông báo đóng/mở cổng bình thường để giữ lại các cảnh báo nguy hiểm
+  // Dọn dẹp nhanh các thông báo đóng/mở cổng bình thường
   const clearGateLogsOnly = () => {
-    const remainingAlerts = alerts.filter(a => !a.id.startsWith('alert_gate_'));
     if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm('Dọn dẹp toàn bộ thông báo đóng/mở cổng thông thường?') : true;
+      const ok = typeof window !== 'undefined' ? window.confirm('Dọn dẹp các thông báo đóng/mở cổng thông thường?') : true;
       if (ok) {
         alerts.forEach(a => {
           if (a.id.startsWith('alert_gate_')) {
@@ -61,7 +60,7 @@ export default function AlertsScreen() {
     } else {
       Alert.alert(
         'Dọn thông báo cổng',
-        'Dọn dẹp toàn bộ thông báo đóng/mở cổng thông thường?',
+        'Dọn dẹp các thông báo đóng/mở cổng thông thường?',
         [
           { text: 'Hủy', style: 'cancel' },
           {
@@ -84,49 +83,46 @@ export default function AlertsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.responsiveWrapper}>
-        {/* Tiêu đề trang thông báo */}
+        {/* Header tinh gọn, không chữ dư thừa */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.screenSubtitle}>Trung tâm an ninh & giám sát</Text>
-            <Text style={styles.screenTitle}>Thông Báo & Cảnh Báo</Text>
-          </View>
+          <Text style={styles.screenTitle}>Thông Báo & Cảnh Báo</Text>
 
           <View style={styles.headerActions}>
             {gateAlertsCount > 2 && (
               <TouchableOpacity onPress={clearGateLogsOnly} style={styles.clearGateBtn} activeOpacity={0.7}>
-                <Ionicons name="refresh-outline" size={15} color={COLORS.primary} />
-                <Text style={styles.clearGateText}>Dọn lịch sử cổng ({gateAlertsCount})</Text>
+                <Ionicons name="refresh-outline" size={14} color={COLORS.primary} />
+                <Text style={styles.clearGateText}>Dọn cổng ({gateAlertsCount})</Text>
               </TouchableOpacity>
             )}
 
             {alerts.length > 0 && (
               <TouchableOpacity onPress={confirmClearAll} style={styles.clearAllBtn} activeOpacity={0.7}>
-                <Ionicons name="trash-outline" size={15} color={COLORS.danger} />
+                <Ionicons name="trash-outline" size={14} color={COLORS.danger} />
                 <Text style={styles.clearAllText}>Xóa tất cả</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* Thanh Thống Kê Tổng Quan An Ninh */}
+        {/* Khối tóm tắt nhanh trạng thái an ninh */}
         <View style={styles.summaryBar}>
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIconBox, { backgroundColor: dangerCount > 0 ? '#FEF2F2' : '#ECFDF5' }]}>
               <Ionicons
                 name={dangerCount > 0 ? 'shield-outline' : 'shield-checkmark'}
-                size={20}
+                size={18}
                 color={dangerCount > 0 ? COLORS.danger : COLORS.success}
               />
             </View>
             <View>
               <Text style={styles.summaryValue}>{dangerCount > 0 ? 'Nguy cấp' : 'An toàn'}</Text>
-              <Text style={styles.summaryLabel}>Trạng thái hệ thống</Text>
+              <Text style={styles.summaryLabel}>Hệ thống</Text>
             </View>
           </View>
 
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIconBox, { backgroundColor: '#FEF2F2' }]}>
-              <Ionicons name="alert-circle" size={20} color={COLORS.danger} />
+              <Ionicons name="alert-circle" size={18} color={COLORS.danger} />
             </View>
             <View>
               <Text style={[styles.summaryValue, { color: COLORS.danger }]}>{dangerCount}</Text>
@@ -136,7 +132,7 @@ export default function AlertsScreen() {
 
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIconBox, { backgroundColor: '#FFFBEB' }]}>
-              <Ionicons name="warning" size={20} color={COLORS.warning} />
+              <Ionicons name="warning" size={18} color={COLORS.warning} />
             </View>
             <View>
               <Text style={[styles.summaryValue, { color: COLORS.warning }]}>{warningCount}</Text>
@@ -146,7 +142,7 @@ export default function AlertsScreen() {
 
           <View style={styles.summaryCard}>
             <View style={[styles.summaryIconBox, { backgroundColor: '#EFF6FF' }]}>
-              <Ionicons name="information-circle" size={20} color={COLORS.primary} />
+              <Ionicons name="information-circle" size={18} color={COLORS.primary} />
             </View>
             <View>
               <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{infoCount}</Text>
@@ -155,7 +151,7 @@ export default function AlertsScreen() {
           </View>
         </View>
 
-        {/* Thanh Bộ Lọc Phân Loại Thông Báo */}
+        {/* Thanh chuyển tab bộ lọc rõ ràng 4 mục */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterRow}>
           <TouchableOpacity
             style={[styles.filterChip, filter === 'all' && styles.filterChipActive]}
@@ -201,11 +197,11 @@ export default function AlertsScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Khung Thử Nghiệm Tình Huống Báo Động Nhanh */}
+        {/* Khung mô phỏng sự cố nhanh */}
         <View style={styles.demoCard}>
           <View style={styles.demoHeaderRow}>
-            <Ionicons name="flask-outline" size={16} color={COLORS.primary} />
-            <Text style={styles.demoTitle}>Thử nghiệm tình huống báo động tức thì (Mô phỏng):</Text>
+            <Ionicons name="flask-outline" size={15} color={COLORS.primary} />
+            <Text style={styles.demoTitle}>Thử nghiệm sự cố:</Text>
           </View>
 
           <View style={styles.demoButtonsGrid}>
@@ -215,7 +211,7 @@ export default function AlertsScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.demoBtnIcon, { backgroundColor: '#E0F2FE' }]}>
-                <Ionicons name="water" size={16} color={COLORS.water} />
+                <Ionicons name="water" size={15} color={COLORS.water} />
               </View>
               <Text style={styles.demoBtnText}>Rò rỉ nước</Text>
             </TouchableOpacity>
@@ -226,9 +222,9 @@ export default function AlertsScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.demoBtnIcon, { backgroundColor: '#FEF3C7' }]}>
-                <Ionicons name="volume-high" size={16} color={COLORS.sound} />
+                <Ionicons name="volume-high" size={15} color={COLORS.sound} />
               </View>
-              <Text style={styles.demoBtnText}>Tiếng nổ / ồn</Text>
+              <Text style={styles.demoBtnText}>Tiếng ồn lớn</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -237,7 +233,7 @@ export default function AlertsScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.demoBtnIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="flame" size={16} color={COLORS.temperature} />
+                <Ionicons name="flame" size={15} color={COLORS.temperature} />
               </View>
               <Text style={styles.demoBtnText}>Quá nhiệt 41.5°</Text>
             </TouchableOpacity>
@@ -248,37 +244,31 @@ export default function AlertsScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.demoBtnIcon, { backgroundColor: '#F3E8FF' }]}>
-                <Ionicons name="card" size={16} color={COLORS.gate} />
+                <Ionicons name="card" size={15} color={COLORS.gate} />
               </View>
               <Text style={styles.demoBtnText}>Thẻ RFID lạ</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Danh Sách Thẻ Thông Báo */}
+        {/* Danh sách thông báo */}
         {filteredAlerts.length === 0 ? (
           <View style={styles.emptyBox}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="shield-checkmark" size={44} color={COLORS.success} />
+              <Ionicons name="shield-checkmark" size={38} color={COLORS.success} />
             </View>
-            <Text style={styles.emptyTitle}>Hệ thống hoàn toàn an toàn</Text>
+            <Text style={styles.emptyTitle}>Hệ thống an toàn</Text>
             <Text style={styles.emptyDesc}>
               {filter === 'all'
-                ? 'Hiện không có sự cố hay cảnh báo nguy hiểm nào trong ngôi nhà.'
-                : `Không có thông báo nào thuộc danh mục "${filter === 'danger' ? 'Báo động' : filter === 'warning' ? 'Cảnh báo' : 'Hoạt động'}".`}
+                ? 'Không có thông báo hoặc cảnh báo nào.'
+                : `Không có thông báo trong mục "${filter === 'danger' ? 'Báo động' : filter === 'warning' ? 'Cảnh báo' : 'Hoạt động'}".`}
             </Text>
-            {filter !== 'all' && (
-              <TouchableOpacity style={styles.resetFilterBtn} onPress={() => setFilter('all')} activeOpacity={0.7}>
-                <Text style={styles.resetFilterBtnText}>Xem tất cả thông báo</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ) : (
           <View style={styles.alertsList}>
             {filteredAlerts.map(alert => {
               const isDanger = alert.type === 'danger';
               const isWarning = alert.type === 'warning';
-              const isInfo = !isDanger && !isWarning;
 
               return (
                 <View
@@ -287,10 +277,9 @@ export default function AlertsScreen() {
                     styles.alertCard,
                     isDanger && styles.alertCardDanger,
                     isWarning && styles.alertCardWarning,
-                    isInfo && styles.alertCardInfo,
+                    !isDanger && !isWarning && styles.alertCardInfo,
                   ]}
                 >
-                  {/* Cột Icon Tròn */}
                   <View
                     style={[
                       styles.alertIconCircle,
@@ -303,12 +292,11 @@ export default function AlertsScreen() {
                   >
                     <Ionicons
                       name={isDanger ? 'alert-circle' : isWarning ? 'warning' : 'information-circle'}
-                      size={22}
+                      size={20}
                       color={isDanger ? COLORS.danger : isWarning ? COLORS.warning : COLORS.primary}
                     />
                   </View>
 
-                  {/* Cột Nội Dung Thông Báo */}
                   <View style={styles.alertContent}>
                     <View style={styles.alertMetaRow}>
                       <View
@@ -335,23 +323,22 @@ export default function AlertsScreen() {
                         </Text>
                       </View>
 
-                      <Text style={styles.alertTime}>{alert.time} • {alert.date || 'Hôm nay'}</Text>
+                      <Text style={styles.alertTime}>{alert.time}</Text>
                     </View>
 
                     <Text style={styles.alertTitle} numberOfLines={2}>
                       {alert.title}
                     </Text>
-                    <Text style={styles.alertMessage}>{alert.message}</Text>
+                    {alert.message ? <Text style={styles.alertMessage}>{alert.message}</Text> : null}
                   </View>
 
-                  {/* Nút Xóa Thông Báo */}
                   <TouchableOpacity
                     onPress={() => dismissAlert(alert.id)}
                     style={styles.dismissBtn}
                     activeOpacity={0.6}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="close" size={18} color={COLORS.textMuted} />
+                    <Ionicons name="close" size={16} color={COLORS.textMuted} />
                   </TouchableOpacity>
                 </View>
               );
@@ -366,7 +353,7 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background, // Nền xám tuyết hiện đại #F8FAFC
+    backgroundColor: COLORS.background,
   },
   content: {
     paddingHorizontal: SIZES.lg,
@@ -375,46 +362,39 @@ const styles = StyleSheet.create({
   },
   responsiveWrapper: {
     width: '100%',
-    maxWidth: 960, // Giới hạn chiều rộng tối ưu trên màn hình máy tính Web để không bị bè ngang
+    maxWidth: 960,
     alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: SIZES.md,
-    gap: 12,
-  },
-  screenSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.5,
+    gap: 8,
   },
   screenTitle: {
     fontSize: 24,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginTop: 2,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     alignItems: 'center',
   },
   clearGateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingVertical: 7,
-    paddingHorizontal: 11,
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 9,
     borderRadius: SIZES.radiusSm,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#BFDBFE',
   },
   clearGateText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.primary,
   },
@@ -422,76 +402,75 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusSm,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
   },
   clearAllText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.danger,
   },
   summaryBar: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: SIZES.lg,
+    gap: 8,
+    marginBottom: SIZES.md,
     flexWrap: 'wrap',
   },
   summaryCard: {
     flex: 1,
-    minWidth: 140,
+    minWidth: 120,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusMd,
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
     ...SHADOWS.small,
   },
   summaryIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   summaryValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: COLORS.textPrimary,
   },
   summaryLabel: {
     fontSize: 11,
     color: COLORS.textSecondary,
-    marginTop: 1,
   },
   filterScroll: {
     marginBottom: SIZES.md,
   },
   filterRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: SIZES.radiusFull,
     backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   filterDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   filterChipActive: {
     borderColor: COLORS.primary,
@@ -510,7 +489,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9FF',
   },
   filterText: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textSecondary,
     fontWeight: '600',
   },
@@ -533,8 +512,8 @@ const styles = StyleSheet.create({
   demoCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 14,
-    marginBottom: SIZES.lg,
+    padding: 12,
+    marginBottom: SIZES.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     ...SHADOWS.small,
@@ -543,100 +522,86 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   demoTitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textSecondary,
     fontWeight: '700',
   },
   demoButtonsGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     flexWrap: 'wrap',
   },
   demoBtn: {
     flex: 1,
-    minWidth: 120,
+    minWidth: 110,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderRadius: SIZES.radiusMd,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   demoBtnIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   demoBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   emptyBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 56,
+    paddingVertical: 44,
     backgroundColor: '#F0FDF4',
-    borderRadius: SIZES.radiusXl,
+    borderRadius: SIZES.radiusLg,
     borderWidth: 1,
     borderColor: '#BBF7D0',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     marginTop: 6,
   },
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: '#15803D',
-    marginTop: 16,
+    marginTop: 12,
   },
   emptyDesc: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#166534',
     textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 20,
-    maxWidth: 420,
-  },
-  resetFilterBtn: {
-    marginTop: 16,
-    paddingVertical: 9,
-    paddingHorizontal: 16,
-    borderRadius: SIZES.radiusSm,
-    backgroundColor: '#16A34A',
-  },
-  resetFilterBtnText: {
-    color: COLORS.white,
-    fontSize: 13,
-    fontWeight: '700',
+    marginTop: 4,
   },
   alertsList: {
-    gap: 12,
+    gap: 10,
   },
   alertCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 16,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 10,
     ...SHADOWS.small,
   },
   alertCardDanger: {
@@ -652,9 +617,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   alertIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -665,11 +630,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   badgePill: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     borderRadius: 4,
   },
   badgeDanger: {
@@ -677,7 +642,7 @@ const styles = StyleSheet.create({
   },
   badgeDangerText: {
     color: COLORS.danger,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
   badgeWarning: {
@@ -685,7 +650,7 @@ const styles = StyleSheet.create({
   },
   badgeWarningText: {
     color: '#B45309',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
   badgeInfo: {
@@ -693,7 +658,7 @@ const styles = StyleSheet.create({
   },
   badgeInfoText: {
     color: COLORS.primary,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
   alertTime: {
@@ -702,21 +667,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   alertTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    lineHeight: 20,
   },
   alertMessage: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textSecondary,
-    lineHeight: 19,
     marginTop: 2,
   },
   dismissBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(241, 245, 249, 0.8)',

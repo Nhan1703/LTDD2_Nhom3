@@ -25,22 +25,22 @@ export default function SettingsScreen() {
     resetToDefaults,
   } = useIoT();
 
-  // Cấu hình kết nối trực tiếp ESP32 qua Wi-Fi LAN
+  // Địa chỉ Web Server ESP32 trong mạng LAN
   const [hardwareServerUrl, setHardwareServerUrl] = useState(networkConfig?.hardwareServerUrl || 'http://192.168.1.6:5000');
-  // Cấu hình kết nối đám mây Firebase Realtime Database
+  // URL Firebase Realtime Database
   const [firebaseUrl, setFirebaseUrl] = useState(networkConfig?.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app');
   const [useFirebase, setUseFirebase] = useState(networkConfig?.useFirebase !== false);
   const [modalVisible, setModalVisible] = useState(false);
   const [showHardwareGuide, setShowHardwareGuide] = useState(false);
 
-  // Tự động điền IP của ESP32 nếu hệ thống phát hiện từ Firebase Cloud
+  // Tự động nhận diện IP nếu ESP32 vừa gửi dữ liệu lên Firebase
   useEffect(() => {
     if (detectedEsp32Ip && (!hardwareServerUrl || hardwareServerUrl.includes('192.168.1.6:5000'))) {
       setHardwareServerUrl(detectedEsp32Ip);
     }
   }, [detectedEsp32Ip]);
 
-  // Lưu thiết lập cấu hình mạng
+  // Lưu cấu hình mạng
   const handleSaveSettings = () => {
     updateSettings({
       hardwareServerUrl,
@@ -48,16 +48,16 @@ export default function SettingsScreen() {
       useFirebase,
     });
     if (Platform.OS === 'web') {
-      window.alert('Đã lưu cấu hình kết nối IoT (Firebase Realtime Database & Wi-Fi LAN).');
+      window.alert('Đã lưu cấu hình kết nối.');
     } else {
-      Alert.alert('Thành công', 'Đã lưu cấu hình kết nối IoT (Firebase Realtime Database & Wi-Fi LAN).');
+      Alert.alert('Thành công', 'Đã lưu cấu hình kết nối.');
     }
   };
 
-  // Đặt lại dữ liệu về trạng thái ban đầu
+  // Đặt lại dữ liệu mặc định
   const handleReset = () => {
     if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm('Thao tác này sẽ đặt lại toàn bộ danh sách cảm biến về mặc định ban đầu. Bạn có chắc không?') : true;
+      const ok = typeof window !== 'undefined' ? window.confirm('Đặt lại toàn bộ danh sách cảm biến về mặc định?') : true;
       if (ok) {
         resetToDefaults().then(() => {
           if (typeof window !== 'undefined') window.alert('Hệ thống đã trở về trạng thái gốc.');
@@ -66,7 +66,7 @@ export default function SettingsScreen() {
     } else {
       Alert.alert(
         'Khôi phục mặc định',
-        'Thao tác này sẽ đặt lại toàn bộ danh sách cảm biến về mặc định ban đầu. Bạn có chắc không?',
+        'Đặt lại toàn bộ danh sách cảm biến về mặc định?',
         [
           { text: 'Hủy', style: 'cancel' },
           {
@@ -85,31 +85,20 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.responsiveWrapper}>
-        {/* Header màn hình cài đặt */}
+        {/* Header tinh gọn */}
         <View style={styles.header}>
-          <Text style={styles.screenSubtitle}>Cấu hình & kết nối</Text>
           <Text style={styles.screenTitle}>Cài Đặt Hệ Thống</Text>
-          <Text style={styles.headerExplain}>
-            Quản lý kết nối đám mây Firebase, mạng LAN ESP32 và sơ đồ chân phần cứng ngoại vi.
-          </Text>
         </View>
 
-        {/* ========================================================= */}
-        {/* NHÓM 1: KẾT NỐI MẠNG & ĐỒNG BỘ ĐÁM MÂY (NETWORK & CLOUD) */}
-        {/* ========================================================= */}
-        <Text style={styles.sectionHeader}>Kết Nối Mạng & Đám Mây</Text>
+        {/* Nhóm 1: Kết nối mạng */}
+        <Text style={styles.sectionHeader}>Kết Nối Mạng</Text>
 
-        {/* Thẻ 1: Đồng Bộ Firebase Realtime Database */}
+        {/* Thẻ Firebase */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <View style={{ flex: 1, paddingRight: 10 }}>
-              <View style={styles.cardTitleRow}>
-                <Ionicons name="cloud-done-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.cardTitle}>Đồng Bộ Firebase Realtime Database</Text>
-              </View>
-              <Text style={styles.cardDesc}>
-                Đồng bộ dữ liệu cảm biến và nhận lệnh điều khiển tức thì từ xa qua Internet / 4G (Máy chủ Singapore: ltdd-945a5).
-              </Text>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="cloud-done-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Đồng Bộ Firebase</Text>
             </View>
             <Switch
               value={useFirebase}
@@ -120,7 +109,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Firebase Realtime DB URL (HTTPS REST API)</Text>
+            <Text style={styles.inputLabel}>Firebase Realtime DB URL</Text>
             <TextInput
               style={styles.textInput}
               value={firebaseUrl}
@@ -136,17 +125,17 @@ export default function SettingsScreen() {
             onPress={handleSaveSettings}
             activeOpacity={0.8}
           >
-            <Ionicons name="cloud-upload-outline" size={18} color={COLORS.white} />
+            <Ionicons name="cloud-upload-outline" size={16} color={COLORS.white} />
             <Text style={styles.saveBtnText}>Lưu Cấu Hình Firebase</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Thẻ 2: Kết Nối ESP32 Nội Bộ (Wi-Fi LAN) với tính năng Tự Động Dò IP */}
+        {/* Thẻ ESP32 LAN */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
             <View style={styles.cardTitleRow}>
               <Ionicons name="wifi-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.cardTitle}>Kết Nối ESP32 Nội Bộ (Wi-Fi LAN)</Text>
+              <Text style={styles.cardTitle}>Kết Nối ESP32 (Wi-Fi LAN)</Text>
             </View>
             {detectedEsp32Ip ? (
               <View style={styles.ipFoundBadge}>
@@ -155,21 +144,17 @@ export default function SettingsScreen() {
               </View>
             ) : (
               <View style={styles.ipSearchingBadge}>
-                <Ionicons name="radio-outline" size={13} color={COLORS.textMuted} />
-                <Text style={styles.ipSearchingBadgeText}>Đang dò tìm</Text>
+                <Ionicons name="radio-outline" size={12} color={COLORS.textMuted} />
+                <Text style={styles.ipSearchingBadgeText}>Đang dò</Text>
               </View>
             )}
           </View>
 
-          <Text style={styles.cardDesc}>
-            Địa chỉ IP nội bộ của vi điều khiển ESP32 khi kết nối cùng mạng Wi-Fi để phản hồi trực tiếp không qua Internet.
-          </Text>
-
-          {/* Khối hiển thị kết quả tự động phát hiện IP */}
+          {/* Hộp tự động dò IP */}
           {detectedEsp32Ip ? (
             <View style={styles.ipFoundBox}>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={styles.ipFoundBoxLabel}>⚡ ĐÃ TỰ ĐỘNG PHÁT HIỆN IP ESP32:</Text>
+              <View style={{ flex: 1, paddingRight: 6 }}>
+                <Text style={styles.ipFoundBoxLabel}>IP ESP32 PHÁT HIỆN:</Text>
                 <Text style={styles.ipFoundBoxValue}>{detectedEsp32Ip}</Text>
               </View>
               <TouchableOpacity
@@ -178,33 +163,33 @@ export default function SettingsScreen() {
                   setHardwareServerUrl(detectedEsp32Ip);
                   updateSettings({ hardwareServerUrl: detectedEsp32Ip });
                   if (Platform.OS === 'web') {
-                    window.alert(`Đã tự động điền IP ${detectedEsp32Ip} vào cấu hình LAN!`);
+                    window.alert(`Đã tự động điền IP: ${detectedEsp32Ip}`);
                   } else {
-                    Alert.alert('Thành công', `Đã tự động điền IP ${detectedEsp32Ip} vào cấu hình LAN!`);
+                    Alert.alert('Thành công', `Đã tự động điền IP: ${detectedEsp32Ip}`);
                   }
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="flash" size={14} color={COLORS.white} />
+                <Ionicons name="flash" size={13} color={COLORS.white} />
                 <Text style={styles.applyIpBtnText}>Tự Động Nhập</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.ipWaitingBox}>
-              <Ionicons name="wifi-outline" size={16} color={COLORS.primary} />
+              <Ionicons name="wifi-outline" size={15} color={COLORS.primary} />
               <Text style={styles.ipWaitingBoxText}>
-                Hệ thống đang tự động lắng nghe địa chỉ IP khi ESP32 cắm nguồn và kết nối Wi-Fi...
+                Đang chờ ESP32 kết nối Wi-Fi để nhận diện IP...
               </Text>
             </View>
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Địa chỉ Web Server ESP32 (HTTP URL)</Text>
+            <Text style={styles.inputLabel}>Địa chỉ Web Server ESP32</Text>
             <TextInput
               style={styles.textInput}
               value={hardwareServerUrl}
               onChangeText={setHardwareServerUrl}
-              placeholder="http://192.168.1.23 hoặc http://IP_ESP32"
+              placeholder="http://192.168.1.23"
               placeholderTextColor={COLORS.textMuted}
               autoCapitalize="none"
             />
@@ -218,22 +203,22 @@ export default function SettingsScreen() {
                   setHardwareServerUrl(detectedEsp32Ip);
                   updateSettings({ hardwareServerUrl: detectedEsp32Ip });
                   if (Platform.OS === 'web') {
-                    window.alert(`Đã tự động cập nhật IP: ${detectedEsp32Ip}`);
+                    window.alert(`Đã cập nhật IP: ${detectedEsp32Ip}`);
                   } else {
-                    Alert.alert('Đã nhận diện', `Đã tự động cập nhật IP: ${detectedEsp32Ip}`);
+                    Alert.alert('Đã cập nhật', `Đã cập nhật IP: ${detectedEsp32Ip}`);
                   }
                 } else {
                   if (Platform.OS === 'web') {
-                    window.alert('Đang chờ ESP32 gửi tín hiệu IP lên Firebase Cloud. Vui lòng cắm nguồn ESP32 và đảm bảo đã kết nối Wi-Fi.');
+                    window.alert('Đang chờ ESP32 gửi tín hiệu IP lên Firebase.');
                   } else {
-                    Alert.alert('Đang dò tìm', 'Đang chờ ESP32 gửi tín hiệu IP lên Firebase Cloud. Vui lòng cắm nguồn ESP32 và đảm bảo đã kết nối Wi-Fi.');
+                    Alert.alert('Đang dò', 'Đang chờ ESP32 gửi tín hiệu IP lên Firebase.');
                   }
                 }
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name="sync-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.autoDetectBtnText}>Tự Động Dò IP</Text>
+              <Ionicons name="sync-outline" size={16} color={COLORS.primary} />
+              <Text style={styles.autoDetectBtnText}>Dò IP</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -241,34 +226,29 @@ export default function SettingsScreen() {
               onPress={handleSaveSettings}
               activeOpacity={0.8}
             >
-              <Ionicons name="save-outline" size={18} color={COLORS.white} />
+              <Ionicons name="save-outline" size={16} color={COLORS.white} />
               <Text style={styles.saveLanBtnText}>Lưu Địa Chỉ</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ========================================================= */}
-        {/* NHÓM 2: PHẦN CỨNG & SƠ ĐỒ NỐI DÂY (HARDWARE & WIRING) */}
-        {/* ========================================================= */}
-        <Text style={styles.sectionHeader}>Phần Cứng & Sơ Đồ Nối Dây</Text>
+        {/* Nhóm 2: Phần cứng & ngoại vi */}
+        <Text style={styles.sectionHeader}>Phần Cứng & Thiết Bị</Text>
 
-        {/* Thẻ 3: Sơ đồ nối dây phần cứng ESP32 */}
+        {/* Thẻ Sơ đồ nối dây phần cứng */}
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.guideHeaderRow}
             onPress={() => setShowHardwareGuide(!showHardwareGuide)}
             activeOpacity={0.7}
           >
-            <View style={{ flex: 1 }}>
-              <View style={styles.cardTitleRow}>
-                <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.cardTitle}>Sơ đồ nối dây phần cứng ESP32</Text>
-              </View>
-              <Text style={styles.cardDesc}>Bảng tra cứu các chân GPIO kết nối cảm biến và chấp hành</Text>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Sơ đồ chân ESP32</Text>
             </View>
             <Ionicons
               name={showHardwareGuide ? 'chevron-up-circle' : 'chevron-down-circle'}
-              size={24}
+              size={20}
               color={COLORS.primary}
             />
           </TouchableOpacity>
@@ -280,8 +260,7 @@ export default function SettingsScreen() {
                   <Text style={styles.pinTagText}>GPIO 4</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pinLabel}>🌡️ Cảm biến DHT11 (Nhiệt độ & Độ ẩm)</Text>
-                  <Text style={styles.pinDesc}>Chân Data nối chân GPIO 4 (ESP32 - 1-Wire protocol).</Text>
+                  <Text style={styles.pinLabel}>Cảm biến DHT11 (Nhiệt độ & Độ ẩm)</Text>
                 </View>
               </View>
 
@@ -290,8 +269,7 @@ export default function SettingsScreen() {
                   <Text style={[styles.pinTagText, { color: COLORS.primary }]}>GPIO 13</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pinLabel}>🚪 Cổng ra vào (Servo Motor SG90)</Text>
-                  <Text style={styles.pinDesc}>Chân PWM nối GPIO 13 điều khiển góc 0° (Khóa) - 90° (Mở).</Text>
+                  <Text style={styles.pinLabel}>Cổng Servo SG90 (0° Khóa - 90° Mở)</Text>
                 </View>
               </View>
 
@@ -300,8 +278,7 @@ export default function SettingsScreen() {
                   <Text style={[styles.pinTagText, { color: COLORS.gate }]}>SPI</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pinLabel}>🪪 Đầu đọc thẻ RFID RC522</Text>
-                  <Text style={styles.pinDesc}>SDA: GPIO 5 | SCK: 18 | MOSI: 23 | MISO: 19 | RST: 26.</Text>
+                  <Text style={styles.pinLabel}>Đầu đọc thẻ RFID RC522 (SDA: 5, SCK: 18, MOSI: 23, MISO: 19)</Text>
                 </View>
               </View>
 
@@ -310,25 +287,19 @@ export default function SettingsScreen() {
                   <Text style={[styles.pinTagText, { color: '#B45309' }]}>GPIO 2</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pinLabel}>💡 Đèn LED chiếu sáng & Còi Buzzer</Text>
-                  <Text style={styles.pinDesc}>LED: GPIO 2 (Board) | Còi báo động: GPIO 27.</Text>
+                  <Text style={styles.pinLabel}>Đèn LED (GPIO 2) & Còi Buzzer (GPIO 27)</Text>
                 </View>
               </View>
             </View>
           )}
         </View>
 
-        {/* Thẻ 4: Mở Rộng Thêm Cảm Biến */}
+        {/* Thẻ Thêm cảm biến */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <View style={styles.cardTitleRow}>
-                <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.cardTitle}>Mở Rộng Thêm Cảm Biến</Text>
-              </View>
-              <Text style={styles.cardDesc}>
-                Mở rộng hệ thống: Thêm cảm biến Khí Gas MQ-2, Ánh sáng LDR, Chuyển động PIR, Khói...
-              </Text>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Thêm Cảm Biến</Text>
             </View>
 
             <TouchableOpacity
@@ -336,28 +307,21 @@ export default function SettingsScreen() {
               onPress={() => setModalVisible(true)}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={18} color={COLORS.white} />
-              <Text style={styles.addSensorCompactBtnText}>Thêm Mới</Text>
+              <Ionicons name="add" size={16} color={COLORS.white} />
+              <Text style={styles.addSensorCompactBtnText}>Thêm</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ========================================================= */}
-        {/* NHÓM 3: HỆ THỐNG & KHÔI PHỤC (SYSTEM & MAINTENANCE) */}
-        {/* ========================================================= */}
-        <Text style={styles.sectionHeader}>Hệ Thống & Khôi Phục</Text>
+        {/* Nhóm 3: Vận hành */}
+        <Text style={styles.sectionHeader}>Vận Hành</Text>
 
-        {/* Thẻ 5: Chế độ Mô phỏng (Demo Live) */}
+        {/* Thẻ Chế độ mô phỏng */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <View style={styles.cardTitleRow}>
-                <Ionicons name="play-circle-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.cardTitle}>Chế độ Mô phỏng (Demo Live)</Text>
-              </View>
-              <Text style={styles.cardDesc}>
-                Tự động sinh dữ liệu biến thiên phục vụ thuyết trình và thử nghiệm khi chưa cắm phần cứng.
-              </Text>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="play-circle-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Chế độ Mô phỏng (Demo)</Text>
             </View>
             <Switch
               value={isSimulating}
@@ -368,15 +332,12 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Thẻ 6: Khôi phục cài đặt gốc */}
+        {/* Thẻ Đặt lại */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <View style={styles.cardTitleRow}>
-                <Ionicons name="refresh-circle-outline" size={18} color={COLORS.danger} />
-                <Text style={[styles.cardTitle, { color: COLORS.danger }]}>Khôi Phục Trạng Thái Gốc</Text>
-              </View>
-              <Text style={styles.cardDesc}>Đặt lại toàn bộ danh sách cảm biến, cấu hình và nhật ký ban đầu.</Text>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="refresh-circle-outline" size={18} color={COLORS.danger} />
+              <Text style={[styles.cardTitle, { color: COLORS.danger }]}>Khôi Phục Mặc Định</Text>
             </View>
 
             <TouchableOpacity
@@ -384,20 +345,13 @@ export default function SettingsScreen() {
               onPress={handleReset}
               activeOpacity={0.8}
             >
-              <Ionicons name="refresh" size={16} color={COLORS.danger} />
+              <Ionicons name="refresh" size={14} color={COLORS.danger} />
               <Text style={styles.resetCompactBtnText}>Đặt Lại</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Thông tin chân trang đồ án */}
-        <View style={styles.aboutFooter}>
-          <Text style={styles.aboutTitle}>ĐỒ ÁN LẬP TRÌNH DI ĐỘNG (LTDD) • NHÓM 3</Text>
-          <Text style={styles.aboutSubtitle}>HỆ THỐNG IOT SMART HOME & KIỂM SOÁT AN NINH CỔNG RA VÀO</Text>
-          <Text style={styles.aboutVersion}>Triển khai trên Web Vercel & Mobile App Expo Go (SDK 58)</Text>
-        </View>
-
-        {/* Cửa sổ Modal thêm cảm biến */}
+        {/* Modal Thêm cảm biến */}
         <AddSensorModal visible={modalVisible} onClose={() => setModalVisible(false)} />
       </View>
     </ScrollView>
@@ -407,7 +361,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background, // Nền xám tuyết hiện đại #F8FAFC
+    backgroundColor: COLORS.background,
   },
   content: {
     paddingHorizontal: SIZES.lg,
@@ -416,46 +370,33 @@ const styles = StyleSheet.create({
   },
   responsiveWrapper: {
     width: '100%',
-    maxWidth: 960, // Căn giữa trên màn hình Web Desktop
+    maxWidth: 960,
     alignSelf: 'center',
   },
   header: {
     marginBottom: SIZES.md,
   },
-  screenSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.5,
-  },
   screenTitle: {
     fontSize: 24,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginTop: 2,
-  },
-  headerExplain: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    lineHeight: 19,
-    marginTop: 4,
   },
   sectionHeader: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.primary,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     marginTop: SIZES.md,
-    marginBottom: SIZES.sm,
+    marginBottom: 8,
   },
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: SIZES.lg,
+    padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.md,
+    marginBottom: 10,
     ...SHADOWS.small,
   },
   rowBetween: {
@@ -469,30 +410,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  cardDesc: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    lineHeight: 18,
-  },
   inputGroup: {
-    marginTop: SIZES.md,
+    marginTop: 10,
   },
   inputLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: 6,
+    color: COLORS.textSecondary,
+    marginBottom: 5,
   },
   textInput: {
     backgroundColor: '#F8FAFC',
     borderRadius: SIZES.radiusMd,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     fontSize: 13,
     color: COLORS.textPrimary,
     borderWidth: 1,
@@ -502,24 +437,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: COLORS.primary,
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
-    marginTop: SIZES.md,
+    paddingVertical: 10,
+    marginTop: 12,
     ...SHADOWS.small,
   },
   saveBtnText: {
     color: COLORS.white,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   ipFoundBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: SIZES.radiusFull,
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
@@ -532,7 +467,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success,
   },
   ipFoundBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.success,
   },
@@ -540,13 +475,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: SIZES.radiusFull,
     backgroundColor: '#F1F5F9',
   },
   ipSearchingBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.textMuted,
   },
   ipFoundBox: {
@@ -557,17 +492,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#BBF7D0',
     borderRadius: SIZES.radiusMd,
-    padding: 12,
-    marginTop: SIZES.md,
+    padding: 10,
+    marginTop: 10,
   },
   ipFoundBoxLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#166534',
-    letterSpacing: 0.3,
   },
   ipFoundBoxValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#15803D',
     marginTop: 2,
@@ -575,16 +509,16 @@ const styles = StyleSheet.create({
   applyIpBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     backgroundColor: '#16A34A',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: SIZES.radiusSm,
     ...SHADOWS.small,
   },
   applyIpBtnText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   ipWaitingBox: {
@@ -595,19 +529,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#BAE6FD',
     borderRadius: SIZES.radiusMd,
-    padding: 12,
-    marginTop: SIZES.md,
+    padding: 10,
+    marginTop: 10,
   },
   ipWaitingBoxText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#0369A1',
     flex: 1,
-    lineHeight: 18,
   },
   lanButtonsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: SIZES.md,
+    gap: 10,
+    marginTop: 10,
   },
   autoDetectBtn: {
     flex: 1,
@@ -619,11 +552,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#BFDBFE',
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   autoDetectBtnText: {
     color: COLORS.primary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   saveLanBtn: {
@@ -634,12 +567,12 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: COLORS.primary,
     borderRadius: SIZES.radiusMd,
-    paddingVertical: 12,
+    paddingVertical: 10,
     ...SHADOWS.small,
   },
   saveLanBtnText: {
     color: COLORS.white,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   guideHeaderRow: {
@@ -648,91 +581,66 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   guideBody: {
-    marginTop: SIZES.md,
-    paddingTop: SIZES.md,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    gap: 10,
+    gap: 8,
   },
   guideItem: {
     flexDirection: 'row',
     backgroundColor: '#F8FAFC',
-    padding: 12,
+    padding: 10,
     borderRadius: SIZES.radiusSm,
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   pinTagBox: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 4,
     backgroundColor: '#FEE2E2',
   },
   pinTagText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: COLORS.danger,
   },
   pinLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  pinDesc: {
     fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
   },
   addSensorCompactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: SIZES.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
   },
   addSensorCompactBtnText: {
     color: COLORS.white,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   resetCompactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: SIZES.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
   },
   resetCompactBtnText: {
     color: COLORS.danger,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  aboutFooter: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  aboutTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.primary,
-    letterSpacing: 0.5,
-  },
-  aboutSubtitle: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  aboutVersion: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 2,
   },
 });
