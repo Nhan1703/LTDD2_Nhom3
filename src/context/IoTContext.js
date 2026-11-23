@@ -495,16 +495,24 @@ export const IoTProvider = ({ children }) => {
       } catch (e) {}
     }
 
-    // Tạo thông báo lịch sử cổng
+    // Tạo thông báo lịch sử cổng (phân loại chuẩn INFO - Không làm báo động giả)
     const newAlert = {
       id: `alert_gate_${Date.now()}`,
-      title: willBeOpen ? 'Cổng đã được mở' : 'Cổng đã khóa an toàn',
-      message: `Cổng ra vào được ${willBeOpen ? 'MỞ' : 'ĐÓNG'} bởi: ${method}`,
-      type: willBeOpen ? 'warning' : 'info',
+      title: willBeOpen ? 'Cổng đã mở' : 'Cổng đã khóa an toàn',
+      message: `Cổng ra vào được ${willBeOpen ? 'mở' : 'đóng'} bởi: ${method}`,
+      type: 'info', // Mở/đóng cổng hợp lệ là INFO (thông tin vận hành), không phải cảnh báo nguy hiểm
       time: nowStr,
       date: 'Vừa xong',
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    setAlerts(prev => {
+      // Chống spam: Nếu thông báo trước đó cũng là cổng và diễn ra cách dưới 3 giây, bỏ qua để tránh trùng lặp
+      const lastGateAlert = prev.find(a => a.id.startsWith('alert_gate_'));
+      if (lastGateAlert) {
+        const timeDiff = Math.abs(Date.now() - Number(lastGateAlert.id.replace('alert_gate_', '')));
+        if (timeDiff < 3000) return prev;
+      }
+      return [newAlert, ...prev.slice(0, 49)];
+    });
   };
 
   const updateGateMode = (mode, delaySec = 10) => {
@@ -573,19 +581,66 @@ export const IoTProvider = ({ children }) => {
     );
   };
 
-  // Kích hoạt biến cố mô phỏng kiểm thử
+  // Kích hoạt biến cố mô phỏng kiểm thử an ninh & cảm biến
   const triggerSimulationEvent = (eventType) => {
     const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     if (eventType === 'high_temp') {
       setSensors(prev =>
-        prev.map(s => (s.type === SENSOR_TYPES.TEMPERATURE ? { ...s, value: 39.5, status: 'Nhiệt độ quá cao!' } : s))
+        prev.map(s => (s.type === SENSOR_TYPES.TEMPERATURE ? { ...s, value: 41.5, status: 'Quá nhiệt nghiêm trọng!' } : s))
       );
       setAlerts(prev => [
         {
           id: `alert_sim_${Date.now()}`,
-          title: '🔥 CẢNH BÁO: Quá nhiệt môi trường!',
-          message: 'Nhiệt độ đạt mức 39.5°C, có khả năng hỏa hoạn hoặc phòng quá nóng.',
+          title: 'Quá nhiệt môi trường 41.5°C',
+          message: 'Cảm biến nhiệt độ phòng khách vượt mức báo động nguy hiểm (Ngưỡng 40°C)!',
+          type: 'danger',
+          time: timeStr,
+          date: 'Vừa xong',
+        },
+        ...prev,
+      ]);
+    } else if (eventType === 'water_leak') {
+      setSensors(prev =>
+        prev.map(s => (s.type === SENSOR_TYPES.WATER_LEAK ? { ...s, value: 92, isDetected: true, status: 'NGUY HIỂM NGẬP NƯỚC' } : s))
+      );
+      setAlerts(prev => [
+        {
+          id: `alert_water_${Date.now()}`,
+          title: 'Phát hiện rò rỉ nước ngập',
+          message: 'Cảm biến nước sân sau phát hiện tiếp xúc chất lỏng cực đoan (Mức 92%)!',
+          type: 'danger',
+          time: timeStr,
+          date: 'Vừa xong',
+        },
+        ...prev,
+      ]);
+    } else if (eventType === 'water_clear') {
+      setSensors(prev =>
+        prev.map(s => (s.type === SENSOR_TYPES.WATER_LEAK ? { ...s, value: 0, isDetected: false, status: 'Khô ráo' } : s))
+      );
+    } else if (eventType === 'loud_sound') {
+      setSensors(prev =>
+        prev.map(s => (s.type === SENSOR_TYPES.SOUND ? { ...s, value: 95, status: 'Tiếng ồn nguy hiểm!' } : s))
+      );
+      setIsLightOn(true); // Tự động bật đèn khi phát hiện tiếng nổ / ồn lớn
+      setAlerts(prev => [
+        {
+          id: `alert_sound_${Date.now()}`,
+          title: 'Phát hiện tiếng nổ / âm thanh lớn',
+          message: 'Âm thanh đạt 95 dB vượt ngưỡng nguy hiểm. Hệ thống đã tự động bật đèn LED!',
+          type: 'warning',
+          time: timeStr,
+          date: 'Vừa xong',
+        },
+        ...prev,
+      ]);
+    } else if (eventType === 'invalid_rfid') {
+      setAlerts(prev => [
+        {
+          id: `alert_rfid_${Date.now()}`,
+          title: 'Cảnh báo an ninh cổng: Thẻ RFID lạ',
+          message: 'Phát hiện quẹt thẻ không hợp lệ (UID: 8A4B2C1D). Cổng đã từ chối mở!',
           type: 'danger',
           time: timeStr,
           date: 'Vừa xong',
@@ -597,6 +652,14 @@ export const IoTProvider = ({ children }) => {
 
   const clearAlerts = () => {
     setAlerts([]);
+  };
+
+  const clearGateLogs = () => {
+    setGateState(prev => {
+      const updated = { ...prev, logs: [] };
+      StorageService.saveGateState(updated);
+      return updated;
+    });
   };
 
   const dismissAlert = (alertId) => {
@@ -642,6 +705,7 @@ export const IoTProvider = ({ children }) => {
         updateSensorThresholds,
         triggerSimulationEvent,
         clearAlerts,
+        clearGateLogs,
         dismissAlert,
         updateSettings,
         resetToDefaults,
