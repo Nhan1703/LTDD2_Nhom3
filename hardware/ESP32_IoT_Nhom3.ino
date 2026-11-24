@@ -472,29 +472,29 @@ void kiemTraLenhFirebase() {
     String payload = http.getString();
 
     // Kiểm tra lệnh mở hoặc đóng cửa từ Firebase (xóa lệnh ngay lập tức để chống lặp mở/đóng vô tận)
-    if (payload.indexOf("\"gate\":true") >= 0) {
-      xoaLenhCongFirebase(); // Tiêu thụ và xóa lệnh trên Firebase trước tiên
+    if (payload.indexOf("\"gate\":true") >= 0 || payload.indexOf("\"gate\": true") >= 0) {
       if (!trangThaiCua) {
-        moCua("Firebase App");
+        moCua("Firebase App"); // Thực thi Servo mở cổng NGAY TỨC THÌ (0ms)
       }
-    } else if (payload.indexOf("\"gate\":false") >= 0) {
-      xoaLenhCongFirebase(); // Tiêu thụ và xóa lệnh trên Firebase trước tiên
+      xoaLenhCongFirebase(); // Dọn dẹp lệnh trên Cloud sau
+    } else if (payload.indexOf("\"gate\":false") >= 0 || payload.indexOf("\"gate\": false") >= 0) {
       if (trangThaiCua) {
-        dongCua();
+        dongCua(); // Thực thi Servo đóng cổng NGAY TỨC THÌ (0ms)
       }
+      xoaLenhCongFirebase();
     }
 
     // Kiểm tra lệnh bật hoặc tắt đèn từ Firebase (xóa lệnh ngay lập tức để chống trùng lặp click và giật trạng thái)
-    if (payload.indexOf("\"light\":true") >= 0) {
-      xoaLenhDenFirebase();
+    if (payload.indexOf("\"light\":true") >= 0 || payload.indexOf("\"light\": true") >= 0) {
       if (!trangThaiDen) {
-        datTrangThaiDen(true, "Firebase App");
+        datTrangThaiDen(true, "Firebase App"); // Bật đèn LED NGAY TỨC THÌ (0ms)
       }
-    } else if (payload.indexOf("\"light\":false") >= 0) {
-      xoaLenhDenFirebase();
+      xoaLenhDenFirebase(); // Dọn dẹp lệnh trên Cloud sau
+    } else if (payload.indexOf("\"light\":false") >= 0 || payload.indexOf("\"light\": false") >= 0) {
       if (trangThaiDen) {
-        datTrangThaiDen(false, "Firebase App");
+        datTrangThaiDen(false, "Firebase App"); // Tắt đèn LED NGAY TỨC THÌ (0ms)
       }
+      xoaLenhDenFirebase();
     }
   }
   http.end();

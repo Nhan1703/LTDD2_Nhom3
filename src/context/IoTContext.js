@@ -40,7 +40,7 @@ export const IoTProvider = ({ children }) => {
   const [detectedEsp32Ip, setDetectedEsp32Ip] = useState(null);
   // Cấu hình mạng: Kết nối Firebase Cloud và Web Server ESP32 LAN (Đã loại bỏ hoàn toàn MQTT)
   const [networkConfig, setNetworkConfig] = useState({
-    hardwareServerUrl: 'http://192.168.1.6:5000',
+    hardwareServerUrl: 'http://192.168.1.6',
     isConnected: false,
     useFirebase: true,
     firebaseUrl: 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app',
@@ -344,15 +344,13 @@ export const IoTProvider = ({ children }) => {
       }
     } catch (e) {}
 
-    // 3. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
+    // 3. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (Phản hồi tức thì < 15ms khi chung Wi-Fi)
     const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
     if (!isHttps) {
       try {
-        let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+        let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
         if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
           targetUrl = 'http://localhost:5000';
-        } else {
-          targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
         }
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 400);
@@ -389,12 +387,17 @@ export const IoTProvider = ({ children }) => {
     setAlerts(prev => [newAlert, ...prev.slice(0, 49)]);
   };
 
-  // Điều khiển ĐÓNG / MỞ CỔNG từ App / Web
-  const toggleGate = (method = 'Điều khiển qua Web / App') => {
-    // Đánh dấu mốc thời gian người dùng vừa bấm nút để kích hoạt khóa chống giật
-    lastGateToggleTimeRef.current = Date.now();
+  // Điều khiển ĐÓNG / MỞ CỔNG từ App / Web với cơ chế chống dội phím và chống giật Cloud
+  const toggleGate = (method = 'Điều khiển qua Web / App', forceState = null) => {
+    const now = Date.now();
+    // 1. Chống nhấn lặp (Debounce / Cooldown 700ms): Bỏ qua nếu bấm quá nhanh
+    if (now - lastGateToggleTimeRef.current < 700) {
+      return;
+    }
+    // Đánh dấu mốc thời gian người dùng vừa bấm nút để kích hoạt khóa chống giật 4.5 giây
+    lastGateToggleTimeRef.current = now;
     const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const willBeOpen = !gateState.isOpen;
+    const willBeOpen = forceState !== null ? forceState : !gateState.isOpen;
 
     const newLog = {
       id: `log_${Date.now()}`,
@@ -414,11 +417,9 @@ export const IoTProvider = ({ children }) => {
         // Gửi lệnh đóng cổng qua LAN nếu không phải HTTPS Web
         if (!isHttpsEnv) {
           try {
-            let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+            let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
             if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
               targetUrl = 'http://localhost:5000';
-            } else {
-              targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
             }
             fetch(`${targetUrl}/api/gate`, {
               method: 'POST',
@@ -441,6 +442,12 @@ export const IoTProvider = ({ children }) => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ gate: false }),
             }).catch(err => console.log('Firebase auto-close error:', err));
+
+            fetch(`${fbUrl}/smart_home/telemetry.json`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ gate: false }),
+            }).catch(() => {});
           }
         } catch (e) {}
 
@@ -473,24 +480,24 @@ export const IoTProvider = ({ children }) => {
       logs: [newLog, ...prev.logs.slice(0, 49)],
     }));
 
-    // 1. Gửi lệnh điều khiển cổng lên Firebase Realtime Database tức thì (/smart_home/commands.json)
+    // 1. Gửi lệnh điều khiển cổng lên Firebase Realtime Database (/smart_home/commands.json)
+    // Và đồng bộ tức thì lên telemetry.json để chống xung đột vòng lặp đọc ngầm
     try {
       const fbUrl = (networkConfig.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app').replace(/\/+$/, '');
       if (fbUrl) {
+        // Gửi lệnh cho ESP32 nhận (ESP32 sẽ tự tiêu thụ và xóa lệnh bằng xoaLenhCongFirebase)
         fetch(`${fbUrl}/smart_home/commands.json`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ gate: willBeOpen }),
         }).catch(err => console.log('Firebase gate command error:', err));
 
-        // Tự động giải phóng lệnh sau 800ms để tránh kẹt trạng thái trên Cloud gây lặp vô tận
-        setTimeout(() => {
-          fetch(`${fbUrl}/smart_home/commands.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gate: null }),
-          }).catch(() => {});
-        }, 800);
+        // Cập nhật ngay lên telemetry để App không bị kéo ngược trạng thái
+        fetch(`${fbUrl}/smart_home/telemetry.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gate: willBeOpen }),
+        }).catch(() => {});
       }
     } catch (e) {}
 
@@ -498,11 +505,9 @@ export const IoTProvider = ({ children }) => {
     const isHttpsWebContext = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
     if (!isHttpsWebContext) {
       try {
-        let targetUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
+        let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
         if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
           targetUrl = 'http://localhost:5000';
-        } else {
-          targetUrl = targetUrl.replace('192.168.1.100', '192.168.1.6');
         }
 
         const controller = new AbortController();

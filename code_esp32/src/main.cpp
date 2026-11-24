@@ -324,6 +324,7 @@ String taoChuoiJson() {
   json += "\"flame_val\":0,";
   json += "\"rfid\":\"" + uidTheVuaQuet + "\",";
   json += "\"master\":\"" + uidTheMaster + "\",";
+  json += "\"ip\":\"http://" + WiFi.localIP().toString() + "\",";
   json += "\"updatedAt\":" + String(millis());
   json += "}";
   return json;
@@ -387,20 +388,20 @@ void kiemTraLenhFirebase() {
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
-    if (payload.indexOf("\"gate\":true") >= 0) {
+    if (payload.indexOf("\"gate\":true") >= 0 || payload.indexOf("\"gate\": true") >= 0) {
+      if (!trangThaiCua) moCua("Firebase App"); // Kích hoạt Servo mở cổng NGAY LẬP TỨC (0ms)
+      xoaLenhCongFirebase(); // Dọn dẹp lệnh trên Cloud sau khi đã thực thi phần cứng
+    } else if (payload.indexOf("\"gate\":false") >= 0 || payload.indexOf("\"gate\": false") >= 0) {
+      if (trangThaiCua) dongCua(); // Kích hoạt Servo đóng cổng NGAY LẬP TỨC (0ms)
       xoaLenhCongFirebase();
-      if (!trangThaiCua) moCua("Firebase App");
-    } else if (payload.indexOf("\"gate\":false") >= 0) {
-      xoaLenhCongFirebase();
-      if (trangThaiCua) dongCua();
     }
 
-    if (payload.indexOf("\"light\":true") >= 0) {
+    if (payload.indexOf("\"light\":true") >= 0 || payload.indexOf("\"light\": true") >= 0) {
+      if (!trangThaiDen) datTrangThaiDen(true, "Firebase App"); // Bật đèn LED NGAY LẬP TỨC (0ms)
+      xoaLenhDenFirebase(); // Dọn dẹp lệnh trên Cloud sau khi đã thực thi phần cứng
+    } else if (payload.indexOf("\"light\":false") >= 0 || payload.indexOf("\"light\": false") >= 0) {
+      if (trangThaiDen) datTrangThaiDen(false, "Firebase App"); // Tắt đèn LED NGAY LẬP TỨC (0ms)
       xoaLenhDenFirebase();
-      if (!trangThaiDen) datTrangThaiDen(true, "Firebase App");
-    } else if (payload.indexOf("\"light\":false") >= 0) {
-      xoaLenhDenFirebase();
-      if (trangThaiDen) datTrangThaiDen(false, "Firebase App");
     }
   }
   http.end();
