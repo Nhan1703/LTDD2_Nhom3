@@ -67,50 +67,52 @@ function MainApp() {
       {/* Vùng hiển thị nội dung màn hình chính */}
       <View style={styles.contentArea}>{renderScreen()}</View>
 
-      {/* Thanh điều hướng phía dưới (Bottom Navigation Bar) */}
-      <View style={styles.tabBar}>
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={styles.tabItem}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              {/* Vạch chỉ báo active tinh tế ở đỉnh mỗi tab */}
-              <View
-                style={[
-                  styles.activeIndicator,
-                  { backgroundColor: isActive ? COLORS.primary : 'transparent' },
-                ]}
-              />
-
-              <View style={styles.iconContainer}>
-                <Ionicons
-                  name={isActive ? tab.activeIcon : tab.icon}
-                  size={23}
-                  color={isActive ? COLORS.primary : COLORS.textMuted}
-                />
-                {/* Huy hiệu đếm cảnh báo hoặc trạng thái mở cổng */}
-                {tab.badge && (
-                  <View style={[styles.tabBadge, { backgroundColor: tab.badgeColor || COLORS.danger }]}>
-                    <Text style={styles.tabBadgeText}>{tab.badge}</Text>
-                  </View>
-                )}
-              </View>
-
-              <Text
-                style={[
-                  styles.tabLabel,
-                  isActive ? styles.tabLabelActive : styles.tabLabelInactive,
-                ]}
+      {/* Thanh điều hướng phía dưới (Bottom Navigation Bar) có container cân đối trên Web */}
+      <View style={styles.tabBarWrapper}>
+        <View style={styles.tabBarInner}>
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabItem}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
               >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+                {/* Vạch chỉ báo active tinh tế ở đỉnh mỗi tab */}
+                <View
+                  style={[
+                    styles.activeIndicator,
+                    { backgroundColor: isActive ? COLORS.primary : 'transparent' },
+                  ]}
+                />
+
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name={isActive ? tab.activeIcon : tab.icon}
+                    size={23}
+                    color={isActive ? COLORS.primary : COLORS.textMuted}
+                  />
+                  {/* Huy hiệu đếm cảnh báo hoặc trạng thái mở cổng */}
+                  {tab.badge && (
+                    <View style={[styles.tabBadge, { backgroundColor: tab.badgeColor || COLORS.danger }]}>
+                      <Text style={styles.tabBadgeText}>{tab.badge}</Text>
+                    </View>
+                  )}
+                </View>
+
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    isActive ? styles.tabLabelActive : styles.tabLabelInactive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -133,14 +135,23 @@ const styles = StyleSheet.create({
   contentArea: {
     flex: 1,
   },
-  tabBar: {
-    flexDirection: 'row',
+  // Vỏ bọc ngoài của thanh menu dưới giúp nền trắng và đường viền luôn phủ kín chiều ngang
+  tabBarWrapper: {
+    width: '100%',
     backgroundColor: COLORS.cardBg,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    ...SHADOWS.medium,
+  },
+  // Khung bên trong giới hạn bề rộng đúng 720px để cân xứng tuyệt đối với Header và nội dung ở giữa
+  tabBarInner: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: SIZES.md,
     paddingTop: 4,
     paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-    ...SHADOWS.medium,
   },
   tabItem: {
     flex: 1,

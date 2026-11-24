@@ -13,67 +13,70 @@ export default function Header({ title, subtitle, onOpenAlerts, onOpenSettings }
 
   return (
     <View style={styles.container}>
-      {/* Cụm Tiêu Đề bên trái: Lời chào/Thương hiệu + Tiêu đề trang to rõ */}
-      <View style={styles.titleColumn}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandDot} />
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {subtitle || 'HỆ THỐNG IOT • NHÓM 3'}
+      {/* Khung giới hạn độ rộng để thẳng hàng chuẩn với nội dung ở giữa trên màn hình Web PC */}
+      <View style={styles.innerContainer}>
+        {/* Cụm Tiêu Đề bên trái: Lời chào/Thương hiệu + Tiêu đề trang to rõ */}
+        <View style={styles.titleColumn}>
+          <View style={styles.brandRow}>
+            <View style={styles.brandDot} />
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {subtitle || 'HỆ THỐNG IOT • NHÓM 3'}
+            </Text>
+          </View>
+          <Text style={styles.title} numberOfLines={1}>
+            {title || 'Bảng Điều Khiển'}
           </Text>
         </View>
-        <Text style={styles.title} numberOfLines={1}>
-          {title || 'Bảng Điều Khiển'}
-        </Text>
-      </View>
 
-      {/* Cụm Tiện Ích bên phải: Huy hiệu kết nối Cloud + Nút Chuông + Nút Cài đặt */}
-      <View style={styles.actionsCluster}>
-        {/* Badge trạng thái kết nối phần cứng Cloud tinh gọn */}
-        <View
-          style={[
-            styles.connectionBadge,
-            isHardwareConnected ? styles.badgeConnected : styles.badgeDisconnected,
-          ]}
-        >
+        {/* Cụm Tiện Ích bên phải: Huy hiệu kết nối Cloud + Nút Chuông + Nút Cài đặt */}
+        <View style={styles.actionsCluster}>
+          {/* Badge trạng thái kết nối phần cứng Cloud tinh gọn */}
           <View
             style={[
-              styles.connectionDot,
-              { backgroundColor: isHardwareConnected ? COLORS.success : COLORS.danger },
+              styles.connectionBadge,
+              isHardwareConnected ? styles.badgeConnected : styles.badgeDisconnected,
             ]}
-          />
-          <Text style={styles.connectionText} numberOfLines={1}>
-            {isHardwareConnected ? (connectionSource || 'Firebase') : 'Chờ thiết bị'}
-          </Text>
+          >
+            <View
+              style={[
+                styles.connectionDot,
+                { backgroundColor: isHardwareConnected ? COLORS.success : COLORS.danger },
+              ]}
+            />
+            <Text style={styles.connectionText} numberOfLines={1}>
+              {isHardwareConnected ? (connectionSource || 'Firebase') : 'Chờ thiết bị'}
+            </Text>
+          </View>
+
+          {/* Nút Chuông cảnh báo có huy hiệu đếm */}
+          {onOpenAlerts && (
+            <TouchableOpacity
+              style={styles.circleButton}
+              onPress={onOpenAlerts}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="notifications-outline" size={18} color={COLORS.textPrimary} />
+              {unreadAlerts > 0 && (
+                <View style={styles.alertDotBadge}>
+                  <Text style={styles.alertDotText}>
+                    {unreadAlerts > 9 ? '9+' : unreadAlerts}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {/* Nút Cài đặt nhanh */}
+          {onOpenSettings && (
+            <TouchableOpacity
+              style={styles.circleButton}
+              onPress={onOpenSettings}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={17} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+          )}
         </View>
-
-        {/* Nút Chuông cảnh báo có huy hiệu đếm */}
-        {onOpenAlerts && (
-          <TouchableOpacity
-            style={styles.circleButton}
-            onPress={onOpenAlerts}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="notifications-outline" size={18} color={COLORS.textPrimary} />
-            {unreadAlerts > 0 && (
-              <View style={styles.alertDotBadge}>
-                <Text style={styles.alertDotText}>
-                  {unreadAlerts > 9 ? '9+' : unreadAlerts}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {/* Nút Cài đặt nhanh */}
-        {onOpenSettings && (
-          <TouchableOpacity
-            style={styles.circleButton}
-            onPress={onOpenSettings}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-outline" size={17} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -81,16 +84,22 @@ export default function Header({ title, subtitle, onOpenAlerts, onOpenSettings }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    width: '100%',
     backgroundColor: COLORS.cardBg,
-    paddingHorizontal: SIZES.lg,
-    paddingTop: 10,
-    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     ...SHADOWS.small,
+  },
+  innerContainer: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SIZES.lg,
+    paddingTop: 10,
+    paddingBottom: 14,
   },
   titleColumn: {
     flex: 1,
