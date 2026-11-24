@@ -1,116 +1,120 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { useIoT } from '../context/IoTContext';
 
 export default function TempHumidityCard({ tempSensor, humSensor }) {
-  const { triggerSimulationEvent } = useIoT();
+  // Giá trị thực tế từ cảm biến DHT11
+  const tempVal = tempSensor ? tempSensor.value : 26.2;
+  const humVal = humSensor ? humSensor.value : 89;
 
-  const tempVal = tempSensor ? tempSensor.value : 28.5;
-  const humVal = humSensor ? humSensor.value : 65;
-
-  const isHighTemp = tempSensor && tempVal >= tempSensor.warningThreshold;
-  const isDangerTemp = tempSensor && tempVal >= tempSensor.dangerThreshold;
-
-  const isHighHum = humSensor && humVal >= humSensor.warningThreshold;
+  // Kiểm tra ngưỡng cảnh báo nhiệt độ và độ ẩm
+  const isHighTemp = tempSensor && tempVal >= (tempSensor.warningThreshold || 35);
+  const isDangerTemp = tempSensor && tempVal >= (tempSensor.dangerThreshold || 40);
+  const isHighHum = humSensor && humVal >= (humSensor.warningThreshold || 85);
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View style={styles.iconBox}>
-            <Ionicons name="thermometer" size={22} color={COLORS.temperature} />
+      {/* Header Widget */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="thermometer" size={18} color="#E11D48" />
           </View>
           <View>
-            <Text style={styles.cardTitle}>Nhiệt độ & Độ ẩm</Text>
-            <Text style={styles.locationText}>Phòng khách (Cảm biến DHT11/22)</Text>
+            <Text style={styles.widgetTitle}>Môi Trường Phòng Khách</Text>
+            <Text style={styles.widgetSubtitle}>Cảm biến DHT11 • ESP32 GPIO 4</Text>
           </View>
         </View>
 
-        {/* Quick simulation for heatwave */}
-        <TouchableOpacity
-          style={styles.testBtn}
-          onPress={() => triggerSimulationEvent('high_temp')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="flame-outline" size={14} color={COLORS.temperature} />
-          <Text style={styles.testBtnText}>Test quá nhiệt</Text>
-        </TouchableOpacity>
+        {/* Huy hiệu thời gian thực */}
+        <View style={styles.realtimePill}>
+          <View style={styles.realtimeDot} />
+          <Text style={styles.realtimeText}>Live</Text>
+        </View>
       </View>
 
-      {/* Dual Gauges Row */}
-      <View style={styles.gaugesRow}>
-        {/* Temperature Box */}
-        <View style={[styles.gaugeBox, isHighTemp && (isDangerTemp ? styles.gaugeBoxDanger : styles.gaugeBoxWarning)]}>
-          <View style={styles.gaugeHeader}>
-            <Text style={styles.gaugeLabel}>Nhiệt độ</Text>
-            <Ionicons
-              name="sunny-outline"
-              size={16}
-              color={isHighTemp ? COLORS.danger : COLORS.temperature}
-            />
+      {/* Thân widget: Hiển thị song song 2 chỉ số nguyên khối, không đóng khung vụn vặt */}
+      <View style={styles.metricsContainer}>
+        {/* Cột 1: Nhiệt độ */}
+        <View style={styles.metricColumn}>
+          <View style={styles.metricLabelRow}>
+            <Ionicons name="sunny" size={14} color="#E11D48" style={{ marginRight: 4 }} />
+            <Text style={styles.metricLabel}>Nhiệt độ</Text>
           </View>
 
-          <View style={styles.gaugeValueRow}>
-            <Text style={[styles.gaugeValue, isDangerTemp && { color: COLORS.danger }]}>
+          <View style={styles.metricValueRow}>
+            <Text style={[styles.metricBigNumber, { color: isDangerTemp ? COLORS.danger : '#E11D48' }]}>
               {tempVal}
             </Text>
-            <Text style={styles.gaugeUnit}>°C</Text>
+            <Text style={styles.metricUnit}>°C</Text>
           </View>
 
-          <View style={styles.miniBar}>
+          {/* Thanh đo mức nhiệt độ */}
+          <View style={styles.gaugeTrack}>
             <View
               style={[
-                styles.miniBarFill,
+                styles.gaugeFill,
                 {
-                  width: `${Math.min(100, Math.max(5, (tempVal / 50) * 100))}%`,
-                  backgroundColor: isDangerTemp ? COLORS.danger : COLORS.temperature,
+                  width: `${Math.min(100, Math.max(10, (tempVal / 50) * 100))}%`,
+                  backgroundColor: isDangerTemp ? COLORS.danger : '#E11D48',
                 },
               ]}
             />
           </View>
 
-          <Text style={styles.gaugeStatus}>
-            {tempSensor?.status || (isHighTemp ? 'Hơi nóng' : 'Mát mẻ')}
-          </Text>
+          {/* Huy hiệu trạng thái nhiệt độ */}
+          <View style={[styles.statusTag, { backgroundColor: '#FFE4E6' }]}>
+            <Text style={[styles.statusTagText, { color: '#BE123C' }]}>
+              {tempSensor?.status || (isDangerTemp ? 'Nguy hiểm' : isHighTemp ? 'Khá nóng' : 'Mát mẻ')}
+            </Text>
+          </View>
         </View>
 
-        {/* Humidity Box */}
-        <View style={[styles.gaugeBox, isHighHum && styles.gaugeBoxWarning]}>
-          <View style={styles.gaugeHeader}>
-            <Text style={styles.gaugeLabel}>Độ ẩm không khí</Text>
-            <Ionicons name="water-outline" size={16} color={COLORS.humidity} />
+        {/* Vạch chia đôi giữa 2 cột */}
+        <View style={styles.columnDivider} />
+
+        {/* Cột 2: Độ ẩm */}
+        <View style={styles.metricColumn}>
+          <View style={styles.metricLabelRow}>
+            <Ionicons name="water" size={14} color="#0284C7" style={{ marginRight: 4 }} />
+            <Text style={styles.metricLabel}>Độ ẩm không khí</Text>
           </View>
 
-          <View style={styles.gaugeValueRow}>
-            <Text style={styles.gaugeValue}>{humVal}</Text>
-            <Text style={styles.gaugeUnit}>%</Text>
+          <View style={styles.metricValueRow}>
+            <Text style={[styles.metricBigNumber, { color: '#0284C7' }]}>
+              {humVal}
+            </Text>
+            <Text style={styles.metricUnit}>%</Text>
           </View>
 
-          <View style={styles.miniBar}>
+          {/* Thanh đo mức độ ẩm */}
+          <View style={[styles.gaugeTrack, { backgroundColor: '#E0F2FE' }]}>
             <View
               style={[
-                styles.miniBarFill,
+                styles.gaugeFill,
                 {
-                  width: `${Math.min(100, Math.max(5, humVal))}%`,
-                  backgroundColor: COLORS.humidity,
+                  width: `${Math.min(100, Math.max(10, humVal))}%`,
+                  backgroundColor: '#0284C7',
                 },
               ]}
             />
           </View>
 
-          <Text style={styles.gaugeStatus}>
-            {humSensor?.status || 'Thoải mái'}
-          </Text>
+          {/* Huy hiệu trạng thái độ ẩm */}
+          <View style={[styles.statusTag, { backgroundColor: '#E0F2FE' }]}>
+            <Text style={[styles.statusTagText, { color: '#0369A1' }]}>
+              {humSensor?.status || (humVal > 80 ? 'Khá ẩm' : 'Lý tưởng')}
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Comfort Index Summary */}
-      <View style={styles.summaryBar}>
-        <Ionicons name="leaf-outline" size={16} color="#15803D" />
-        <Text style={styles.summaryText}>
-          Chỉ số tiện nghi: {tempVal > 32 ? 'Nóng bức, nên bật điều hòa' : tempVal < 22 ? 'Hơi se lạnh' : 'Nhiệt độ & độ ẩm rất lý tưởng'}
+      {/* Dải tiện nghi tinh tế ở đáy thẻ */}
+      <View style={styles.comfortNotice}>
+        <Ionicons name="leaf" size={14} color="#059669" />
+        <Text style={styles.comfortNoticeText}>
+          {tempVal > 32 ? 'Nóng bức • Nên bật điều hòa' : tempVal < 20 ? 'Hơi se lạnh • Nên giữ ấm' : 'Chỉ số tiện nghi: Nhiệt độ & độ ẩm rất lý tưởng'}
         </Text>
       </View>
     </View>
@@ -121,138 +125,145 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: SIZES.lg,
+    padding: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SIZES.md,
     ...SHADOWS.small,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SIZES.md,
+    marginBottom: 14,
   },
-  titleRow: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    flex: 1,
   },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.dangerMuted,
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFE4E6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+  widgetTitle: {
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
-  locationText: {
-    fontSize: 12,
+  widgetSubtitle: {
+    fontSize: 11,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
     fontWeight: '500',
   },
-  testBtn: {
+  realtimePill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: SIZES.radiusFull,
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: SIZES.radiusSm,
     borderWidth: 1,
-    borderColor: COLORS.dangerBorder,
-    backgroundColor: COLORS.dangerMuted,
+    borderColor: '#A7F3D0',
   },
-  testBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.danger,
+  realtimeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: COLORS.success,
   },
-  gaugesRow: {
+  realtimeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.success,
+  },
+  metricsContainer: {
     flexDirection: 'row',
-    gap: 12,
-  },
-  gaugeBox: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: SIZES.radiusMd,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  gaugeBoxWarning: {
-    borderColor: COLORS.warningBorder,
-    backgroundColor: COLORS.warningMuted,
-  },
-  gaugeBoxDanger: {
-    borderColor: COLORS.dangerBorder,
-    backgroundColor: COLORS.dangerMuted,
-  },
-  gaugeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    backgroundColor: COLORS.cardSubtle,
+    borderRadius: SIZES.radiusMd,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
-  gaugeLabel: {
-    fontSize: 13,
+  metricColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  columnDivider: {
+    width: 1,
+    height: 64,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 8,
+  },
+  metricLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  metricLabel: {
+    fontSize: 11,
+    fontWeight: '700',
     color: COLORS.textSecondary,
-    fontWeight: '600',
   },
-  gaugeValueRow: {
+  metricValueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     marginBottom: 8,
   },
-  gaugeValue: {
-    fontSize: 28,
+  metricBigNumber: {
+    fontSize: 30,
     fontWeight: '800',
-    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
-  gaugeUnit: {
-    fontSize: 16,
-    fontWeight: '600',
+  metricUnit: {
+    fontSize: 15,
+    fontWeight: '700',
     color: COLORS.textSecondary,
     marginLeft: 3,
   },
-  miniBar: {
-    height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
+  gaugeTrack: {
+    width: '80%',
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFEDD5',
     overflow: 'hidden',
     marginBottom: 8,
   },
-  miniBarFill: {
+  gaugeFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2.5,
   },
-  gaugeStatus: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
+  statusTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: SIZES.radiusFull,
   },
-  summaryBar: {
+  statusTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  comfortNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: SIZES.md,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    backgroundColor: '#F0FDF4',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    backgroundColor: '#ECFDF5',
     borderRadius: SIZES.radiusSm,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
   },
-  summaryText: {
-    fontSize: 13,
-    color: '#166534',
-    fontWeight: '600',
+  comfortNoticeText: {
+    fontSize: 11,
+    color: '#065F46',
+    fontWeight: '700',
     flex: 1,
   },
 });

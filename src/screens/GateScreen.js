@@ -5,29 +5,31 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
 export default function GateScreen() {
+  // Lấy dữ liệu và hàm xử lý từ ngữ cảnh IoT
   const { gateState, toggleGate, updateGateMode, rfidInfo, clearGateLogs, triggerSimulationEvent } = useIoT();
   const isOpen = gateState.isOpen;
 
-  // Thời gian đếm ngược đóng cổng tự động
+  // Thời gian đếm ngược tự động đóng cổng (mặc định 10 giây)
   const [selectedDelay, setSelectedDelay] = useState(gateState.autoCloseDelaySec || 10);
-  // Trạng thái mở rộng danh sách nhật ký
+  // Trạng thái thu gọn / mở rộng danh sách nhật ký
   const [showAllLogs, setShowAllLogs] = useState(false);
 
+  // Các mốc thời gian tự đóng cổng khả dụng
   const delays = [5, 10, 15, 30, 60];
 
-  // Cập nhật khoảng thời gian chờ đóng cổng
+  // Thay đổi mốc thời gian chờ đóng cổng
   const handleSelectDelay = (sec) => {
     setSelectedDelay(sec);
     updateGateMode('Auto-Close', sec);
   };
 
-  // Bật/tắt chế độ tự động đóng cổng
+  // Chuyển đổi bật/tắt chế độ tự đóng cổng
   const handleToggleAutoClose = () => {
     const newMode = gateState.mode === 'Auto-Close' ? 'Manual' : 'Auto-Close';
     updateGateMode(newMode, selectedDelay);
   };
 
-  // Xác nhận dọn sạch toàn bộ nhật ký đóng mở cổng
+  // Xác nhận xóa sạch toàn bộ lịch sử đóng/mở cổng
   const handleClearLogs = () => {
     if (Platform.OS === 'web') {
       const ok = typeof window !== 'undefined' ? window.confirm('Bạn có muốn xóa toàn bộ lịch sử đóng/mở cổng không?') : true;
@@ -46,172 +48,256 @@ export default function GateScreen() {
     }
   };
 
+  // Danh sách nhật ký thao tác
   const allLogs = gateState.logs || [];
   const displayedLogs = showAllLogs ? allLogs : allLogs.slice(0, 6);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.responsiveWrapper}>
-        {/* Tiêu đề ngắn gọn, không chữ dư thừa */}
+        {/* Header trang kiểm soát cổng tinh gọn và đồng bộ */}
         <View style={styles.header}>
-          <Text style={styles.screenTitle}>Kiểm Soát Cổng</Text>
+          <View>
+            <Text style={styles.headerSub}>BẢO MẬT & KIỂM SOÁT RA VÀO</Text>
+            <Text style={styles.screenTitle}>Kiểm Soát Cổng</Text>
+          </View>
+          <View style={styles.headerHardwareBadge}>
+            <View style={[styles.statusDotLive, { backgroundColor: isOpen ? COLORS.warning : COLORS.success }]} />
+            <Text style={styles.headerHardwareText}>
+              {isOpen ? 'Cổng Mở' : 'Cổng Khóa'}
+            </Text>
+          </View>
         </View>
 
-        {/* Khối trực quan trạng thái cổng chính */}
+        {/* ========================================================================= */}
+        {/* KHỐI TRỰC QUAN TRẠNG THÁI CỔNG CHÍNH (THIẾT KẾ COMPACT, GỌN GÀNG, KHÔNG BỊ TO QUÁ) */}
+        {/* ========================================================================= */}
         <View style={[styles.gateVisualCard, isOpen ? styles.gateCardOpen : styles.gateCardClosed]}>
-          <View style={styles.hardwareBadgeRow}>
-            <Text style={styles.hardwareTag}>Servo SG90 • GPIO 13 • {isOpen ? 'Góc 90° (Mở)' : 'Góc 0° (Khóa)'}</Text>
+          {/* Hàng trên: Icon trạng thái + Thông tin cổng */}
+          <View style={styles.compactHeaderRow}>
+            {/* Vòng tròn icon bảo mật kích thước vừa vặn */}
+            <View style={[styles.compactIconCircle, { backgroundColor: isOpen ? '#FEF3C7' : '#DCFCE7' }]}>
+              <Ionicons
+                name={isOpen ? 'lock-open' : 'lock-closed'}
+                size={26}
+                color={isOpen ? '#B45309' : '#047857'}
+              />
+            </View>
+
+            <View style={styles.compactTextGroup}>
+              <View style={styles.statusWithTagRow}>
+                <Text style={styles.gateStatusTitle}>
+                  {isOpen ? 'CỔNG ĐANG MỞ' : 'CỔNG ĐÃ KHÓA AN TOÀN'}
+                </Text>
+              </View>
+              <Text style={styles.gateStatusDesc}>
+                {isOpen
+                  ? 'Đang mở • Chờ tự đóng hoặc bấm để khóa'
+                  : 'Đang khóa an toàn • Dùng thẻ RFID hoặc nút bấm'}
+              </Text>
+            </View>
+
+            {/* Tag nhỏ thông tin Servo SG90 ở góc */}
+            <View style={styles.hardwareMiniTag}>
+              <Text style={styles.hardwareMiniTagText}>SG90 • {isOpen ? '90°' : '0°'}</Text>
+            </View>
           </View>
 
-          <View
-            style={[
-              styles.largeIconCircle,
-              { backgroundColor: isOpen ? '#FEF3C7' : '#DCFCE7' },
-            ]}
-          >
-            <Ionicons
-              name={isOpen ? 'lock-open' : 'lock-closed'}
-              size={54}
-              color={isOpen ? COLORS.warning : COLORS.success}
-            />
-          </View>
-
-          <Text style={styles.gateStatusTitle}>
-            {isOpen ? 'CỔNG ĐANG MỞ' : 'CỔNG ĐÃ KHÓA AN TOÀN'}
-          </Text>
-          <Text style={styles.gateStatusDesc}>
-            {isOpen
-              ? 'Đang mở • Chờ tự động đóng hoặc nhấn nút để khóa'
-              : 'Đang khóa an toàn • Dùng thẻ RFID hoặc nhấn nút để mở'}
-          </Text>
-
-          {/* Nút điều khiển Mở / Đóng cổng */}
+          {/* Nút bấm điều khiển Mở / Khóa Cổng chính tinh gọn, thanh lịch */}
           <TouchableOpacity
-            style={[styles.bigGateBtn, isOpen ? styles.btnOpenState : styles.btnCloseState]}
-            onPress={() => toggleGate(isOpen ? 'Đóng qua App/Web' : 'Mở qua App/Web')}
-            activeOpacity={0.8}
+            style={[styles.compactGateBtn, isOpen ? styles.btnOpenState : styles.btnCloseState]}
+            onPress={() => toggleGate(isOpen ? 'Đóng qua App' : 'Mở qua App')}
+            activeOpacity={0.85}
           >
             <Ionicons
-              name={isOpen ? 'close-circle' : 'key'}
-              size={22}
+              name={isOpen ? 'lock-closed' : 'key'}
+              size={18}
               color={COLORS.white}
             />
-            <Text style={styles.bigGateBtnText}>
+            <Text style={styles.compactGateBtnText}>
               {isOpen ? 'Nhấn để Khóa Cổng' : 'Nhấn để Mở Cổng'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Thẻ hiển thị trạng thái đầu đọc thẻ RFID */}
+        {/* ========================================================================= */}
+        {/* CARD ĐẦU ĐỌC THẺ RFID RC522 (CÁC THẺ CON RÕ RÀNG, DỄ ĐỌC) */}
+        {/* ========================================================================= */}
         <View style={styles.rfidHardwareCard}>
           <View style={styles.rfidHardwareHeader}>
             <View style={styles.rfidHeaderLeft}>
-              <Ionicons name="hardware-chip-outline" size={18} color={COLORS.gate} />
+              <View style={styles.rfidChipIconBox}>
+                <Ionicons name="radio-outline" size={15} color={COLORS.accent} />
+              </View>
               <Text style={styles.rfidHardwareTitle}>Đầu đọc thẻ RFID RC522</Text>
             </View>
+
+            {/* Huy hiệu trạng thái xác thực thẻ */}
             <View
               style={[
                 styles.rfidLivePill,
-                { backgroundColor: rfidInfo?.isValid ? '#DCFCE7' : '#F1F5F9' },
+                {
+                  backgroundColor: rfidInfo?.lastUid
+                    ? (rfidInfo.isValid ? COLORS.successMuted : COLORS.dangerMuted)
+                    : COLORS.primaryMuted,
+                  borderColor: rfidInfo?.lastUid
+                    ? (rfidInfo.isValid ? COLORS.successBorder : COLORS.dangerBorder)
+                    : COLORS.primaryBorder,
+                },
               ]}
             >
               <View
                 style={[
                   styles.rfidLiveDot,
-                  { backgroundColor: rfidInfo?.isValid ? COLORS.success : COLORS.textMuted },
+                  {
+                    backgroundColor: rfidInfo?.lastUid
+                      ? (rfidInfo.isValid ? COLORS.success : COLORS.danger)
+                      : COLORS.primary,
+                  },
                 ]}
               />
               <Text
                 style={[
                   styles.rfidLiveText,
-                  { color: rfidInfo?.isValid ? '#15803D' : COLORS.textSecondary },
+                  {
+                    color: rfidInfo?.lastUid
+                      ? (rfidInfo.isValid ? COLORS.success : COLORS.danger)
+                      : COLORS.primary,
+                  },
                 ]}
               >
-                {rfidInfo?.lastUid ? (rfidInfo.isValid ? 'HỢP LỆ (MASTER)' : 'TỪ CHỐI') : 'SẴN SÀNG QUẸT'}
+                {rfidInfo?.lastUid ? (rfidInfo.isValid ? 'HỢP LỆ' : 'TỪ CHỐI') : 'SẴN SÀNG'}
               </Text>
             </View>
           </View>
 
+          {/* 3 ô thẻ thông số UID phân tách độc lập, sắc nét */}
           <View style={styles.rfidGridRow}>
-            <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thẻ vừa quét</Text>
-              <Text style={styles.rfidColValue}>{rfidInfo?.lastUid || 'Chưa có'}</Text>
+            {/* Ô 1: Thẻ vừa quét */}
+            <View style={styles.rfidStatBox}>
+              <Text style={styles.rfidStatLabel}>Thẻ vừa quét</Text>
+              <Text style={[styles.rfidStatValue, { color: COLORS.primary }]} numberOfLines={1}>
+                {rfidInfo?.lastUid || 'Chưa quét'}
+              </Text>
             </View>
-            <View style={styles.rfidColDivider} />
-            <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thẻ Master</Text>
-              <Text style={[styles.rfidColValue, { color: COLORS.gate }]}>
+
+            {/* Ô 2: Thẻ Master */}
+            <View style={styles.rfidStatBox}>
+              <Text style={styles.rfidStatLabel}>Thẻ Master</Text>
+              <Text style={[styles.rfidStatValue, { color: COLORS.accent }]} numberOfLines={1}>
                 {rfidInfo?.masterUid || '620F0307'}
               </Text>
             </View>
-            <View style={styles.rfidColDivider} />
-            <View style={styles.rfidCol}>
-              <Text style={styles.rfidColLabel}>Thời gian</Text>
-              <Text style={styles.rfidColValue}>{rfidInfo?.lastScanTime || 'Vừa xong'}</Text>
+
+            {/* Ô 3: Thời gian quét */}
+            <View style={styles.rfidStatBox}>
+              <Text style={styles.rfidStatLabel}>Thời gian</Text>
+              <Text style={[styles.rfidStatValue, { color: COLORS.textPrimary }]} numberOfLines={1}>
+                {rfidInfo?.lastScanTime || 'Vừa xong'}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Các nút mở nhanh */}
-        <Text style={styles.sectionHeader}>Mở nhanh</Text>
-        <View style={styles.quickMethodsRow}>
-          <TouchableOpacity
-            style={styles.quickMethodBtn}
-            onPress={() => toggleGate('Quẹt thẻ RFID Master')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.methodIconBox, { backgroundColor: '#EFF6FF' }]}>
-              <Ionicons name="card" size={20} color={COLORS.primary} />
-            </View>
-            <View>
-              <Text style={styles.quickMethodText}>Thẻ Master</Text>
-              <Text style={styles.quickMethodSub}>Hợp lệ (620F0307)</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickMethodBtn}
-            onPress={() => toggleGate('Nút bấm cơ học')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.methodIconBox, { backgroundColor: '#ECFDF5' }]}>
-              <Ionicons name="radio-button-on" size={20} color={COLORS.success} />
-            </View>
-            <View>
-              <Text style={styles.quickMethodText}>Nút bấm tường</Text>
-              <Text style={styles.quickMethodSub}>Nút bấm cơ</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickMethodBtn}
-            onPress={() => {
-              if (triggerSimulationEvent) triggerSimulationEvent('invalid_rfid');
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.methodIconBox, { backgroundColor: '#FEF2F2' }]}>
-              <Ionicons name="alert-circle" size={20} color={COLORS.danger} />
-            </View>
-            <View>
-              <Text style={styles.quickMethodText}>Thẻ lạ đột nhập</Text>
-              <Text style={styles.quickMethodSub}>Còi hú báo động</Text>
-            </View>
-          </TouchableOpacity>
+        {/* ========================================================================= */}
+        {/* MỞ NHANH: SẮP XẾP CHUẨN 2 HÀNG X 2 CỘT (2 NÚT MỖI HÀNG, KHÔNG RỚT DÒNG) */}
+        {/* ========================================================================= */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionHeader}>Thao Tác Nhanh</Text>
+          <Text style={styles.sectionHint}>4 phương thức</Text>
         </View>
 
-        {/* Thiết lập tự động đóng cổng */}
+        <View style={styles.quickActionsContainer}>
+          {/* HÀNG 1: Thẻ Master & Nút Bấm Tường */}
+          <View style={styles.quickRow}>
+            {/* Nút 1: Thẻ Master */}
+            <TouchableOpacity
+              style={styles.quickColCard}
+              onPress={() => toggleGate('Quẹt thẻ RFID Master')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.gridIconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="card" size={18} color={COLORS.primary} />
+              </View>
+              <View style={styles.gridTextBox}>
+                <Text style={styles.gridTitle} numberOfLines={1}>Thẻ Master</Text>
+                <Text style={styles.gridSub} numberOfLines={1}>Hợp lệ (620F0307)</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Nút 2: Nút bấm cơ học tường */}
+            <TouchableOpacity
+              style={styles.quickColCard}
+              onPress={() => toggleGate('Nút bấm cơ học')}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.gridIconBox, { backgroundColor: '#ECFDF5' }]}>
+                <Ionicons name="radio-button-on" size={18} color={COLORS.success} />
+              </View>
+              <View style={styles.gridTextBox}>
+                <Text style={styles.gridTitle} numberOfLines={1}>Nút Bấm Tường</Text>
+                <Text style={styles.gridSub} numberOfLines={1}>Nút bấm cơ</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* HÀNG 2: Mở Nhanh 5s & Thẻ Lạ Đột Nhập */}
+          <View style={styles.quickRow}>
+            {/* Nút 3: Mở nhanh 5s tự đóng */}
+            <TouchableOpacity
+              style={styles.quickColCard}
+              onPress={() => {
+                toggleGate('Mở nhanh 5 giây');
+                updateGateMode('Auto-Close', 5);
+              }}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.gridIconBox, { backgroundColor: '#EEF2FF' }]}>
+                <Ionicons name="flash" size={18} color={COLORS.accent} />
+              </View>
+              <View style={styles.gridTextBox}>
+                <Text style={styles.gridTitle} numberOfLines={1}>Mở Nhanh 5s</Text>
+                <Text style={styles.gridSub} numberOfLines={1}>Tự khóa sau 5s</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Nút 4: Giả lập thẻ lạ xâm nhập */}
+            <TouchableOpacity
+              style={styles.quickColCard}
+              onPress={() => {
+                if (triggerSimulationEvent) triggerSimulationEvent('invalid_rfid');
+              }}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.gridIconBox, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="warning" size={18} color={COLORS.danger} />
+              </View>
+              <View style={styles.gridTextBox}>
+                <Text style={styles.gridTitle} numberOfLines={1}>Thẻ Lạ Đột Nhập</Text>
+                <Text style={styles.gridSub} numberOfLines={1}>Còi báo động</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ========================================================================= */}
+        {/* THIẾT LẬP TỰ ĐỘNG ĐÓNG CỔNG */}
+        {/* ========================================================================= */}
         <View style={styles.configCard}>
           <View style={styles.configHeader}>
             <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.configTitle}>Tự động đóng cổng</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="timer-outline" size={17} color={COLORS.textPrimary} />
+                <Text style={styles.configTitle}>Tự động đóng cổng</Text>
+              </View>
               <Text style={styles.configSubtitle}>
                 {gateState.mode === 'Auto-Close'
-                  ? `Đang bật (tự đóng sau ${selectedDelay} giây)`
+                  ? `Đang bật (tự động khóa sau ${selectedDelay}s)`
                   : 'Đang tắt (chỉ đóng thủ công)'}
               </Text>
             </View>
 
+            {/* Nút chuyển đổi Switch Toggle mượt mà */}
             <TouchableOpacity
               style={[
                 styles.switchToggle,
@@ -229,9 +315,10 @@ export default function GateScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Chọn số giây đếm ngược nếu chế độ Auto-Close đang bật */}
           {gateState.mode === 'Auto-Close' && (
             <View style={styles.delaySelectorArea}>
-              <Text style={styles.delayLabel}>Thời gian chờ đóng:</Text>
+              <Text style={styles.delayLabel}>Thời gian chờ tự động đóng:</Text>
               <View style={styles.delayChipsRow}>
                 {delays.map(sec => (
                   <TouchableOpacity
@@ -258,7 +345,9 @@ export default function GateScreen() {
           )}
         </View>
 
-        {/* Nhật ký đóng mở cổng */}
+        {/* ========================================================================= */}
+        {/* NHẬT KÝ ĐÓNG / MỞ CỔNG CHI TIẾT */}
+        {/* ========================================================================= */}
         <View style={styles.logSectionHeader}>
           <View>
             <Text style={styles.sectionHeader}>Nhật Ký Đóng / Mở</Text>
@@ -282,18 +371,18 @@ export default function GateScreen() {
                 style={styles.clearLogsBtn}
                 activeOpacity={0.7}
               >
-                <Ionicons name="trash-outline" size={14} color={COLORS.danger} />
-                <Text style={styles.clearLogsText}>Xóa nhật ký</Text>
+                <Ionicons name="trash-outline" size={13} color={COLORS.danger} />
+                <Text style={styles.clearLogsText}>Xóa</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* Danh sách nhật ký */}
+        {/* Danh sách các bản ghi nhật ký */}
         <View style={styles.logsList}>
           {allLogs.length === 0 ? (
             <View style={styles.emptyLogsBox}>
-              <Ionicons name="document-text-outline" size={32} color={COLORS.textMuted} />
+              <Ionicons name="document-text-outline" size={30} color={COLORS.textMuted} />
               <Text style={styles.emptyLogsText}>Chưa có lượt đóng/mở nào được ghi nhận.</Text>
             </View>
           ) : (
@@ -332,88 +421,129 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 48,
   },
   responsiveWrapper: {
     width: '100%',
-    maxWidth: 960,
+    maxWidth: 720,
     alignSelf: 'center',
   },
+  // Header tinh gọn
   header: {
-    marginBottom: SIZES.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  headerSub: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.primary,
+    letterSpacing: 0.6,
   },
   screenTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: COLORS.textPrimary,
+    marginTop: 1,
   },
+  headerHardwareBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: SIZES.radiusFull,
+    backgroundColor: COLORS.cardBg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 5,
+    ...SHADOWS.small,
+  },
+  statusDotLive: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  headerHardwareText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  // Khối trực quan trạng thái cổng (Compact Hero Card)
   gateVisualCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: SIZES.xl,
-    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.lg,
+    marginBottom: 12,
     ...SHADOWS.small,
   },
   gateCardOpen: {
-    borderColor: '#FDE68A',
-    backgroundColor: '#FFFBEB',
+    borderColor: COLORS.warningBorder,
   },
   gateCardClosed: {
-    borderColor: '#BBF7D0',
-    backgroundColor: '#F0FDF4',
+    borderColor: COLORS.successBorder,
   },
-  hardwareBadgeRow: {
+  compactHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
+    position: 'relative',
   },
-  hardwareTag: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: SIZES.radiusFull,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  largeIconCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+  compactIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    marginRight: 10,
+  },
+  compactTextGroup: {
+    flex: 1,
+    paddingRight: 60,
+  },
+  statusWithTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   gateStatusTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginBottom: 4,
-    textAlign: 'center',
   },
   gateStatusDesc: {
-    fontSize: 13,
+    fontSize: 11,
     color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    lineHeight: 18,
-    maxWidth: 520,
+    marginTop: 2,
+    lineHeight: 15,
   },
-  bigGateBtn: {
+  hardwareMiniTag: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: COLORS.primaryMuted,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: SIZES.radiusSm,
+    borderWidth: 1,
+    borderColor: COLORS.primaryBorder,
+  },
+  hardwareMiniTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  compactGateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     width: '100%',
-    maxWidth: 380,
-    paddingVertical: 13,
+    paddingVertical: 11,
     borderRadius: SIZES.radiusMd,
     ...SHADOWS.small,
   },
@@ -423,18 +553,19 @@ const styles = StyleSheet.create({
   btnOpenState: {
     backgroundColor: COLORS.danger,
   },
-  bigGateBtnText: {
+  compactGateBtnText: {
     color: COLORS.white,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
+  // Card đầu đọc thẻ RFID
   rfidHardwareCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.md,
+    marginBottom: 12,
     ...SHADOWS.small,
   },
   rfidHardwareHeader: {
@@ -446,7 +577,15 @@ const styles = StyleSheet.create({
   rfidHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+  },
+  rfidChipIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   rfidHardwareTitle: {
     fontSize: 13,
@@ -456,63 +595,73 @@ const styles = StyleSheet.create({
   rfidLivePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 7,
     borderRadius: SIZES.radiusFull,
-    gap: 5,
+    borderWidth: 1,
+    gap: 4,
   },
   rfidLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   rfidLiveText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
   rfidGridRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    gap: 6,
   },
-  rfidCol: {
-    alignItems: 'center',
+  rfidStatBox: {
     flex: 1,
+    backgroundColor: COLORS.cardSubtle,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderRadius: SIZES.radiusMd,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    alignItems: 'center',
   },
-  rfidColLabel: {
-    fontSize: 11,
+  rfidStatLabel: {
+    fontSize: 10,
     color: COLORS.textSecondary,
     marginBottom: 2,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  rfidColValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primary,
+  rfidStatValue: {
+    fontSize: 12,
+    fontWeight: '800',
   },
-  rfidColDivider: {
-    width: 1,
-    height: 22,
-    backgroundColor: '#E2E8F0',
+  // Header phần thao tác
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   sectionHeader: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.textPrimary,
-    marginBottom: 4,
   },
-  quickMethodsRow: {
+  sectionHint: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+  },
+  // Thao tác nhanh: Chia 2 hàng, mỗi hàng 2 cột cân xứng tuyệt đối
+  quickActionsContainer: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  quickRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: SIZES.md,
-    flexWrap: 'wrap',
   },
-  quickMethodBtn: {
+  quickColCard: {
     flex: 1,
-    minWidth: 130,
     flexDirection: 'row',
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusMd,
@@ -524,30 +673,34 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...SHADOWS.small,
   },
-  methodIconBox: {
+  gridIconBox: {
     width: 34,
     height: 34,
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  quickMethodText: {
-    fontSize: 13,
+  gridTextBox: {
+    flex: 1,
+  },
+  gridTitle: {
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  quickMethodSub: {
-    fontSize: 11,
+  gridSub: {
+    fontSize: 10,
     color: COLORS.textSecondary,
     marginTop: 1,
   },
+  // Card cấu hình tự đóng
   configCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.md,
+    marginBottom: 12,
     ...SHADOWS.small,
   },
   configHeader: {
@@ -556,20 +709,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   configTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   configSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
   switchToggle: {
     width: 44,
-    height: 26,
-    borderRadius: 13,
+    height: 24,
+    borderRadius: 12,
     padding: 2,
+    justifyContent: 'center',
   },
   switchOn: {
     backgroundColor: COLORS.primary,
@@ -578,25 +732,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#CBD5E1',
   },
   switchThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: COLORS.white,
   },
   switchThumbOn: {
-    transform: [{ translateX: 18 }],
+    transform: [{ translateX: 20 }],
   },
   switchThumbOff: {
     transform: [{ translateX: 0 }],
   },
   delaySelectorArea: {
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 10,
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: COLORS.borderLight,
   },
   delayLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     marginBottom: 6,
     fontWeight: '600',
@@ -604,14 +758,12 @@ const styles = StyleSheet.create({
   delayChipsRow: {
     flexDirection: 'row',
     gap: 6,
-    flexWrap: 'wrap',
   },
   delayChip: {
     flex: 1,
-    minWidth: 48,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: SIZES.radiusSm,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: COLORS.cardSubtle,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -621,23 +773,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   delayChipText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.textSecondary,
   },
   delayChipTextActive: {
     color: COLORS.white,
-    fontWeight: '700',
+    fontWeight: '800',
   },
+  // Nhật ký
   logSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     marginBottom: 8,
-    gap: 8,
   },
   logCountText: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -647,13 +799,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   expandLogBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: '#EFF6FF',
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: SIZES.radiusSm,
+    backgroundColor: COLORS.primaryMuted,
   },
   expandLogText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.primary,
   },
@@ -661,13 +813,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: '#FEF2F2',
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: SIZES.radiusSm,
+    backgroundColor: COLORS.dangerMuted,
   },
   clearLogsText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.danger,
   },
@@ -682,36 +834,37 @@ const styles = StyleSheet.create({
   emptyLogsBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 28,
-    gap: 6,
+    paddingVertical: 24,
+    gap: 5,
   },
   emptyLogsText: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textMuted,
   },
   logItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: COLORS.borderLight,
   },
   logDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     marginRight: 10,
   },
   logDetails: {
     flex: 1,
   },
   logAction: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
   logMethod: {
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.textSecondary,
     marginTop: 1,
   },
@@ -719,12 +872,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   logTime: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   logDate: {
-    fontSize: 11,
+    fontSize: 9,
     color: COLORS.textMuted,
     marginTop: 1,
   },

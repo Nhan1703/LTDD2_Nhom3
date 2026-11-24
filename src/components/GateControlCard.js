@@ -1,41 +1,50 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
 export default function GateControlCard({ onNavigateToGate }) {
+  // Lấy trạng thái cổng và hàm điều khiển từ IoT Context
   const { gateState, toggleGate } = useIoT();
   const isOpen = gateState.isOpen;
 
   return (
     <View style={[styles.card, isOpen ? styles.cardOpen : styles.cardClosed]}>
-      {/* Top Header */}
+      {/* Phần đầu Card: Tiêu đề, icon trạng thái và badge */}
       <View style={styles.header}>
         <View style={styles.titleArea}>
-          <View style={[styles.iconCircle, { backgroundColor: isOpen ? COLORS.warningMuted : COLORS.primaryMuted }]}>
-            <Ionicons
-              name={isOpen ? 'lock-open' : 'lock-closed'}
-              size={24}
-              color={isOpen ? COLORS.warning : COLORS.primary}
-            />
+          {/* Vòng tròn icon trạng thái khóa/mở kích thước gọn gàng */}
+          <View style={[styles.iconHalo, { backgroundColor: isOpen ? '#FEF3C7' : '#DCFCE7' }]}>
+            <View style={[styles.iconCircle, { backgroundColor: isOpen ? '#FDE68A' : '#BBF7D0' }]}>
+              <Ionicons
+                name={isOpen ? 'lock-open' : 'lock-closed'}
+                size={18}
+                color={isOpen ? '#B45309' : '#047857'}
+              />
+            </View>
           </View>
-          <View>
+
+          <View style={styles.titleTextGroup}>
             <Text style={styles.cardTitle}>Cổng ra vào</Text>
-            <Text style={styles.lastActionText}>Cập nhật: {gateState.lastActionTime || 'Vừa xong'}</Text>
+            <Text style={styles.lastActionText}>
+              Cập nhật: {gateState.lastActionTime || 'Vừa xong'}
+            </Text>
           </View>
         </View>
 
-        {/* State Badge */}
+        {/* Badge trạng thái khóa/mở */}
         <View style={[styles.badge, isOpen ? styles.badgeOpen : styles.badgeClosed]}>
+          <View style={[styles.badgeDot, { backgroundColor: isOpen ? COLORS.warning : COLORS.success }]} />
           <Text style={[styles.badgeText, isOpen ? styles.badgeTextOpen : styles.badgeTextClosed]}>
             {isOpen ? 'ĐANG MỞ' : 'ĐÃ KHÓA'}
           </Text>
         </View>
       </View>
 
-      {/* Main Gate Visual / Info */}
+      {/* Nội dung chi tiết cổng */}
       <View style={styles.body}>
+        {/* Khung 2 cột hiển thị chế độ và cảm biến an toàn */}
         <View style={styles.infoRow}>
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Chế độ vận hành</Text>
@@ -43,28 +52,34 @@ export default function GateControlCard({ onNavigateToGate }) {
               {gateState.mode === 'Auto-Close' ? `Tự đóng (${gateState.autoCloseDelaySec}s)` : 'Thủ công (App)'}
             </Text>
           </View>
+
+          <View style={styles.infoColDivider} />
+
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Cảm biến an toàn</Text>
-            <Text style={[styles.infoValue, { color: COLORS.success }]}>Sẵn sàng 100%</Text>
+            <Text style={[styles.infoValue, { color: COLORS.success }]}>
+              Sẵn sàng 100%
+            </Text>
           </View>
         </View>
 
-        {/* Toggle Button */}
+        {/* Nút bấm chuyển đổi Mở / Khóa Cổng tinh gọn */}
         <TouchableOpacity
           style={[styles.actionBtn, isOpen ? styles.actionBtnClose : styles.actionBtnOpen]}
-          onPress={() => toggleGate('Điều khiển qua App')}
-          activeOpacity={0.8}
+          onPress={() => toggleGate('Điều khiển từ Bảng tổng quan')}
+          activeOpacity={0.85}
         >
           <Ionicons
-            name={isOpen ? 'close-circle-outline' : 'key-outline'}
-            size={22}
+            name={isOpen ? 'lock-closed' : 'key'}
+            size={18}
             color={COLORS.white}
           />
           <Text style={styles.actionBtnText}>
-            {isOpen ? 'Đóng cổng ngay' : 'Mở cổng ra vào'}
+            {isOpen ? 'Khóa cổng ngay' : 'Mở cổng ra vào'}
           </Text>
         </TouchableOpacity>
 
+        {/* Đường dẫn mở trang chi tiết cổng */}
         {onNavigateToGate && (
           <TouchableOpacity
             style={styles.detailLink}
@@ -72,7 +87,7 @@ export default function GateControlCard({ onNavigateToGate }) {
             activeOpacity={0.7}
           >
             <Text style={styles.detailLinkText}>Xem nhật ký & cài đặt cổng</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.accent} />
+            <Ionicons name="arrow-forward" size={13} color={COLORS.primary} />
           </TouchableOpacity>
         )}
       </View>
@@ -84,7 +99,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    padding: SIZES.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SIZES.md,
@@ -100,46 +116,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SIZES.md,
+    marginBottom: 10,
   },
   titleArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  iconHalo: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleTextGroup: {
+    justifyContent: 'center',
+  },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
   lastActionText: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 1,
     fontWeight: '500',
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: SIZES.radiusSm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: SIZES.radiusFull,
+    gap: 4,
+    borderWidth: 1,
   },
   badgeOpen: {
     backgroundColor: COLORS.warningMuted,
+    borderColor: COLORS.warningBorder,
   },
   badgeClosed: {
     backgroundColor: COLORS.successMuted,
+    borderColor: COLORS.successBorder,
+  },
+  badgeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   badgeTextOpen: {
     color: COLORS.warning,
@@ -148,38 +185,45 @@ const styles = StyleSheet.create({
     color: COLORS.success,
   },
   body: {
-    gap: SIZES.md,
+    gap: 10,
   },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    padding: SIZES.md,
+    backgroundColor: COLORS.cardSubtle,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: SIZES.radiusMd,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: COLORS.borderLight,
+    alignItems: 'center',
   },
   infoCol: {
     flex: 1,
   },
+  infoColDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 10,
+  },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.textSecondary,
-    marginBottom: 4,
-    fontWeight: '500',
+    marginBottom: 2,
+    fontWeight: '600',
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 10,
     borderRadius: SIZES.radiusMd,
-    gap: 8,
+    gap: 6,
     ...SHADOWS.small,
   },
   actionBtnOpen: {
@@ -190,19 +234,19 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     color: COLORS.white,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
   detailLink: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 4,
+    paddingTop: 1,
     gap: 4,
   },
   detailLinkText: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

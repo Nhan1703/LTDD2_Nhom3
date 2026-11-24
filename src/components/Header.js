@@ -4,79 +4,76 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
-export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, onOpenSettings }) {
-  const { isSimulating, setIsSimulating, isHardwareConnected, connectionSource, alerts } = useIoT();
+export default function Header({ title, subtitle, onOpenAlerts, onOpenSettings }) {
+  // Lấy trạng thái kết nối thực tế từ ngữ cảnh IoT
+  const { isHardwareConnected, connectionSource, alerts } = useIoT();
+
+  // Đếm số lượng thông báo nguy hiểm hoặc cảnh báo chưa xem
   const unreadAlerts = alerts.filter(a => a.type === 'danger' || a.type === 'warning').length;
 
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.subtitle}>{subtitle || 'LTDD - NHÓM 3'}</Text>
-          <Text style={styles.title}>{title || 'IoT Smart Home'}</Text>
+      {/* Cụm Tiêu Đề bên trái: Lời chào/Thương hiệu + Tiêu đề trang to rõ */}
+      <View style={styles.titleColumn}>
+        <View style={styles.brandRow}>
+          <View style={styles.brandDot} />
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle || 'HỆ THỐNG IOT • NHÓM 3'}
+          </Text>
+        </View>
+        <Text style={styles.title} numberOfLines={1}>
+          {title || 'Bảng Điều Khiển'}
+        </Text>
+      </View>
+
+      {/* Cụm Tiện Ích bên phải: Huy hiệu kết nối Cloud + Nút Chuông + Nút Cài đặt */}
+      <View style={styles.actionsCluster}>
+        {/* Badge trạng thái kết nối phần cứng Cloud tinh gọn */}
+        <View
+          style={[
+            styles.connectionBadge,
+            isHardwareConnected ? styles.badgeConnected : styles.badgeDisconnected,
+          ]}
+        >
+          <View
+            style={[
+              styles.connectionDot,
+              { backgroundColor: isHardwareConnected ? COLORS.success : COLORS.danger },
+            ]}
+          />
+          <Text style={styles.connectionText} numberOfLines={1}>
+            {isHardwareConnected ? (connectionSource || 'Firebase') : 'Chờ thiết bị'}
+          </Text>
         </View>
 
-        <View style={styles.actionsRow}>
-          {/* Status Badge */}
+        {/* Nút Chuông cảnh báo có huy hiệu đếm */}
+        {onOpenAlerts && (
           <TouchableOpacity
-            style={[
-              styles.statusBadge,
-              isSimulating ? styles.badgeActive : (isHardwareConnected ? styles.badgeConnected : styles.badgeInactive),
-            ]}
-            onPress={() => setIsSimulating(!isSimulating)}
+            style={styles.circleButton}
+            onPress={onOpenAlerts}
             activeOpacity={0.7}
           >
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: isSimulating ? COLORS.warning : (isHardwareConnected ? COLORS.success : COLORS.danger) },
-              ]}
-            />
-            <Text style={styles.badgeText}>
-              {isSimulating ? 'Mô phỏng' : (isHardwareConnected ? (connectionSource || 'ESP32 LIVE') : 'Chờ thiết bị')}
-            </Text>
+            <Ionicons name="notifications-outline" size={18} color={COLORS.textPrimary} />
+            {unreadAlerts > 0 && (
+              <View style={styles.alertDotBadge}>
+                <Text style={styles.alertDotText}>
+                  {unreadAlerts > 9 ? '9+' : unreadAlerts}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
+        )}
 
-          {/* Add Sensor Button */}
-          {onOpenAddModal && (
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onOpenAddModal}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="add" size={22} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          )}
-
-          {/* Settings Button */}
-          {onOpenSettings && (
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onOpenSettings}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="settings-outline" size={18} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          )}
-
-          {/* Notification Bell */}
-          {onOpenAlerts && (
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onOpenAlerts}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="notifications-outline" size={20} color={COLORS.textPrimary} />
-              {unreadAlerts > 0 && (
-                <View style={styles.alertBadge}>
-                  <Text style={styles.alertBadgeText}>
-                    {unreadAlerts > 9 ? '9+' : unreadAlerts}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+        {/* Nút Cài đặt nhanh */}
+        {onOpenSettings && (
+          <TouchableOpacity
+            style={styles.circleButton}
+            onPress={onOpenSettings}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings-outline" size={17} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -84,101 +81,106 @@ export default function Header({ title, subtitle, onOpenAddModal, onOpenAlerts, 
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: SIZES.lg,
-    paddingTop: 12,
-    paddingBottom: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: COLORS.cardBg,
+    paddingHorizontal: SIZES.lg,
+    paddingTop: 10,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     ...SHADOWS.small,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  titleContainer: {
+  titleColumn: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  brandDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primary,
+    marginRight: 6,
   },
   subtitle: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
     color: COLORS.primary,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   title: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    marginTop: 2,
+    letterSpacing: -0.4,
   },
-  actionsRow: {
+  actionsCluster: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
   },
-  statusBadge: {
+  connectionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: COLORS.cardBgHover,
     borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  badgeActive: {
-    borderColor: COLORS.warningBorder,
-    backgroundColor: COLORS.warningMuted,
   },
   badgeConnected: {
-    borderColor: COLORS.successBorder,
-    backgroundColor: COLORS.successMuted,
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
   },
-  badgeInactive: {
-    borderColor: COLORS.dangerBorder,
-    backgroundColor: COLORS.dangerMuted,
+  badgeDisconnected: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
+  connectionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
   },
-  badgeText: {
-    fontSize: 12,
+  connectionText: {
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.cardBgHover,
+  circleButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.cardSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
     position: 'relative',
   },
-  alertBadge: {
+  alertDotBadge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
+    top: -2,
+    right: -2,
     backgroundColor: COLORS.danger,
-    borderRadius: 9,
-    minWidth: 18,
-    height: 18,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
     borderWidth: 1.5,
     borderColor: COLORS.cardBg,
   },
-  alertBadgeText: {
+  alertDotText: {
     color: COLORS.white,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
 });

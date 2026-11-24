@@ -17,8 +17,6 @@ import AddSensorModal from '../components/AddSensorModal';
 
 export default function SettingsScreen() {
   const {
-    isSimulating,
-    setIsSimulating,
     networkConfig,
     detectedEsp32Ip,
     updateSettings,
@@ -31,6 +29,7 @@ export default function SettingsScreen() {
   const [firebaseUrl, setFirebaseUrl] = useState(networkConfig?.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app');
   const [useFirebase, setUseFirebase] = useState(networkConfig?.useFirebase !== false);
   const [modalVisible, setModalVisible] = useState(false);
+  // Mặc định thu gọn sơ đồ chân để giao diện gọn gàng, người dùng bấm mới mở ra
   const [showHardwareGuide, setShowHardwareGuide] = useState(false);
 
   // Tự động nhận diện IP nếu ESP32 vừa gửi dữ liệu lên Firebase
@@ -83,10 +82,11 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.responsiveWrapper}>
         {/* Header tinh gọn */}
         <View style={styles.header}>
+          <Text style={styles.headerSub}>CẤU HÌNH & KẾT NỐI HỆ THỐNG</Text>
           <Text style={styles.screenTitle}>Cài Đặt Hệ Thống</Text>
         </View>
 
@@ -235,16 +235,21 @@ export default function SettingsScreen() {
         {/* Nhóm 2: Phần cứng & ngoại vi */}
         <Text style={styles.sectionHeader}>Phần Cứng & Thiết Bị</Text>
 
-        {/* Thẻ Sơ đồ nối dây phần cứng */}
+        {/* Thẻ Sơ đồ nối dây phần cứng - Thiết kế dạng Accordion thông minh, mặc định thu gọn */}
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.guideHeaderRow}
             onPress={() => setShowHardwareGuide(!showHardwareGuide)}
             activeOpacity={0.7}
           >
-            <View style={styles.cardTitleRow}>
-              <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.cardTitle}>Sơ đồ chân ESP32</Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.cardTitleRow}>
+                <Ionicons name="hardware-chip-outline" size={18} color={COLORS.primary} />
+                <Text style={styles.cardTitle}>Sơ đồ chân ESP32</Text>
+              </View>
+              <Text style={styles.cardSubtitle}>
+                {showHardwareGuide ? 'Chạm để thu gọn' : 'Chạm để xem chân cắm phần cứng (khi chấm thi)'}
+              </Text>
             </View>
             <Ionicons
               name={showHardwareGuide ? 'chevron-up-circle' : 'chevron-down-circle'}
@@ -316,28 +321,17 @@ export default function SettingsScreen() {
         {/* Nhóm 3: Vận hành */}
         <Text style={styles.sectionHeader}>Vận Hành</Text>
 
-        {/* Thẻ Chế độ mô phỏng */}
+        {/* Thẻ Đặt lại / Khôi phục mặc định */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <View style={styles.cardTitleRow}>
-              <Ionicons name="play-circle-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.cardTitle}>Chế độ Mô phỏng (Demo)</Text>
-            </View>
-            <Switch
-              value={isSimulating}
-              onValueChange={setIsSimulating}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor={COLORS.white}
-            />
-          </View>
-        </View>
-
-        {/* Thẻ Đặt lại */}
-        <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <View style={styles.cardTitleRow}>
-              <Ionicons name="refresh-circle-outline" size={18} color={COLORS.danger} />
-              <Text style={[styles.cardTitle, { color: COLORS.danger }]}>Khôi Phục Mặc Định</Text>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <View style={styles.cardTitleRow}>
+                <Ionicons name="refresh-circle-outline" size={18} color={COLORS.danger} />
+                <Text style={[styles.cardTitle, { color: COLORS.danger }]}>Khôi Phục Mặc Định</Text>
+              </View>
+              <Text style={styles.cardSubtitle}>
+                Đặt lại cấu hình ngưỡng cảm biến và xóa bộ nhớ tạm của app.
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -365,30 +359,37 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 16,
-    paddingBottom: 48,
+    paddingTop: 10,
+    paddingBottom: 40,
   },
   responsiveWrapper: {
     width: '100%',
-    maxWidth: 960,
+    maxWidth: 720,
     alignSelf: 'center',
   },
   header: {
-    marginBottom: SIZES.md,
+    marginBottom: 12,
+  },
+  headerSub: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 0.6,
   },
   screenTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: COLORS.textPrimary,
+    marginTop: 2,
   },
   sectionHeader: {
     fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primary,
+    fontWeight: '800',
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    marginTop: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: SIZES.md,
-    marginBottom: 8,
   },
   card: {
     backgroundColor: COLORS.cardBg,
@@ -411,27 +412,33 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.textPrimary,
+  },
+  cardSubtitle: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 3,
+    lineHeight: 15,
   },
   inputGroup: {
     marginTop: 10,
   },
   inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
     color: COLORS.textSecondary,
-    marginBottom: 5,
+    marginBottom: 4,
+    fontWeight: '600',
   },
   textInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.cardSubtle,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: SIZES.radiusMd,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 8,
     fontSize: 13,
     color: COLORS.textPrimary,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
   },
   saveBtn: {
     flexDirection: 'row',
@@ -441,24 +448,24 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: SIZES.radiusMd,
     paddingVertical: 10,
-    marginTop: 12,
+    marginTop: 10,
     ...SHADOWS.small,
   },
   saveBtnText: {
     color: COLORS.white,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   ipFoundBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 7,
+    backgroundColor: COLORS.successMuted,
+    paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: '#ECFDF5',
+    gap: 4,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: COLORS.successBorder,
   },
   ipFoundDot: {
     width: 6,
@@ -474,72 +481,71 @@ const styles = StyleSheet.create({
   ipSearchingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 7,
+    backgroundColor: COLORS.cardSubtle,
+    paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: SIZES.radiusFull,
-    backgroundColor: '#F1F5F9',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   ipSearchingBadgeText: {
     fontSize: 10,
+    fontWeight: '600',
     color: COLORS.textMuted,
   },
   ipFoundBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: '#BFDBFE',
     borderRadius: SIZES.radiusMd,
     padding: 10,
-    marginTop: 10,
+    marginTop: 8,
   },
   ipFoundBoxLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#166534',
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
   ipFoundBoxValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
-    color: '#15803D',
-    marginTop: 2,
+    color: COLORS.textPrimary,
+    marginTop: 1,
   },
   applyIpBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#16A34A',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: 3,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: SIZES.radiusSm,
-    ...SHADOWS.small,
   },
   applyIpBtnText: {
     color: COLORS.white,
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
   },
   ipWaitingBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#F0F9FF',
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
+    gap: 6,
+    backgroundColor: COLORS.cardSubtle,
     borderRadius: SIZES.radiusMd,
-    padding: 10,
-    marginTop: 10,
+    padding: 8,
+    marginTop: 8,
   },
   ipWaitingBoxText: {
     fontSize: 11,
-    color: '#0369A1',
+    color: COLORS.textSecondary,
     flex: 1,
   },
   lanButtonsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 10,
   },
   autoDetectBtn: {
@@ -585,21 +591,21 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    gap: 8,
+    gap: 6,
   },
   guideItem: {
     flexDirection: 'row',
     backgroundColor: '#F8FAFC',
-    padding: 10,
+    padding: 8,
     borderRadius: SIZES.radiusSm,
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   pinTagBox: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
     backgroundColor: '#FEE2E2',
   },
@@ -609,7 +615,7 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
   },
   pinLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.textPrimary,
   },

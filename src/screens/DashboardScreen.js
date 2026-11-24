@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 import { SENSOR_TYPES } from '../constants/initialSensors';
 import Header from '../components/Header';
-import GateControlCard from '../components/GateControlCard';
 import WaterSensorCard from '../components/WaterSensorCard';
 import SoundSensorCard from '../components/SoundSensorCard';
 import TempHumidityCard from '../components/TempHumidityCard';
@@ -13,10 +12,12 @@ import GenericSensorCard from '../components/GenericSensorCard';
 import AddSensorModal from '../components/AddSensorModal';
 
 export default function DashboardScreen({ navigation, onNavigateTab }) {
+  // Lấy dữ liệu và các hàm điều khiển từ ngữ cảnh IoT toàn cục
   const { sensors, gateState, alerts, toggleGate, toggleLight, isLightOn, rfidInfo } = useIoT();
   const [modalVisible, setModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Thao tác kéo xuống để làm mới dữ liệu
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
@@ -24,13 +25,13 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
     }, 800);
   };
 
-  // Find standard sensors
+  // Tìm các cảm biến tiêu chuẩn trong danh sách
   const waterSensor = sensors.find(s => s.type === SENSOR_TYPES.WATER);
   const soundSensor = sensors.find(s => s.type === SENSOR_TYPES.SOUND);
   const tempSensor = sensors.find(s => s.type === SENSOR_TYPES.TEMPERATURE);
   const humSensor = sensors.find(s => s.type === SENSOR_TYPES.HUMIDITY);
 
-  // Additional custom sensors added by the user
+  // Danh sách các cảm biến mở rộng tùy biến
   const customSensors = sensors.filter(
     s =>
       s.type !== SENSOR_TYPES.WATER &&
@@ -40,14 +41,15 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
       s.type !== SENSOR_TYPES.GATE
   );
 
+  // Đếm số lượng cảm biến đang vượt ngưỡng báo động
   const dangerCount = sensors.filter(s => s.value >= s.dangerThreshold).length;
 
   return (
     <View style={styles.container}>
+      {/* Header hệ thống 1 tầng tối giản, sang trọng chuẩn Apple */}
       <Header
         title="Bảng Điều Khiển"
-        subtitle="HỆ THỐNG GIÁM SÁT IOT - NHÓM 3"
-        onOpenAddModal={() => setModalVisible(true)}
+        subtitle="HỆ THỐNG IOT • NHÓM 3"
         onOpenAlerts={() => onNavigateTab && onNavigateTab('Alerts')}
         onOpenSettings={() => onNavigateTab && onNavigateTab('Settings')}
       />
@@ -59,160 +61,186 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primaryLight} />
         }
       >
-        {/* Quick Summary Bar */}
-        <View style={styles.summaryBar}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryNum}>{sensors.length}</Text>
-            <Text style={styles.summaryLabel}>Cảm biến</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNum, { color: gateState.isOpen ? COLORS.warning : COLORS.accent }]}>
-              {gateState.isOpen ? 'Mở' : 'Khóa'}
-            </Text>
-            <Text style={styles.summaryLabel}>Cổng vào</Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNum, { color: dangerCount > 0 ? COLORS.danger : COLORS.success }]}>
-              {dangerCount > 0 ? `${dangerCount} Báo động` : 'An toàn'}
-            </Text>
-            <Text style={styles.summaryLabel}>Trạng thái</Text>
-          </View>
-        </View>
-
-        {/* Quick Remote Controls Row (Cổng & Đèn LED D2) */}
-        <View style={styles.quickControlsRow}>
-          {/* Quick Toggle Gate */}
-          <TouchableOpacity
-            style={[styles.quickControlCard, gateState.isOpen ? styles.controlCardActiveWarning : styles.controlCardNormal]}
-            onPress={() => toggleGate('Bảng điều khiển nhanh')}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.controlIconBox, { backgroundColor: gateState.isOpen ? COLORS.warningMuted : COLORS.primaryMuted }]}>
-              <Ionicons
-                name={gateState.isOpen ? 'lock-open' : 'lock-closed'}
-                size={22}
-                color={gateState.isOpen ? COLORS.warning : COLORS.primary}
-              />
+        <View style={styles.responsiveWrapper}>
+          {/* ========================================================================= */}
+          {/* DẢI STATUS CHIPS THANH THOÁT (THAY THẾ 3 HỘP CHỮ NHẬT THÔ CŨ) */}
+          {/* ========================================================================= */}
+          <View style={styles.statusChipsRow}>
+            {/* Chip 1: Số cảm biến */}
+            <View style={styles.statusChip}>
+              <View style={[styles.chipDot, { backgroundColor: COLORS.primary }]} />
+              <Text style={styles.chipText}>{sensors.length} Cảm biến</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.controlTitle}>Cổng ra vào</Text>
-              <Text style={[styles.controlStatus, { color: gateState.isOpen ? COLORS.warning : COLORS.textSecondary }]}>
-                {gateState.isOpen ? 'Đang mở' : 'Đã khóa'}
+
+            {/* Chip 2: Trạng thái cổng */}
+            <TouchableOpacity
+              style={styles.statusChip}
+              onPress={() => onNavigateTab && onNavigateTab('Gate')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.chipDot, { backgroundColor: gateState.isOpen ? COLORS.warning : COLORS.accent }]} />
+              <Text style={styles.chipText}>
+                Cổng: {gateState.isOpen ? 'Đang mở' : 'Đã khóa'}
               </Text>
-            </View>
-            <Ionicons name="power" size={18} color={gateState.isOpen ? COLORS.warning : COLORS.textMuted} />
-          </TouchableOpacity>
+            </TouchableOpacity>
 
-          {/* Quick Toggle Light */}
-          <TouchableOpacity
-            style={[styles.quickControlCard, isLightOn ? styles.controlCardActiveLight : styles.controlCardNormal]}
-            onPress={toggleLight}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.controlIconBox, { backgroundColor: isLightOn ? '#FEF9C3' : '#F1F5F9' }]}>
-              <Ionicons
-                name={isLightOn ? 'bulb' : 'bulb-outline'}
-                size={22}
-                color={isLightOn ? '#CA8A04' : COLORS.textMuted}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.controlTitle}>Đèn LED (D2)</Text>
-              <Text style={[styles.controlStatus, { color: isLightOn ? '#CA8A04' : COLORS.textSecondary }]}>
-                {isLightOn ? 'Bật sáng' : 'Tắt'}
+            {/* Chip 3: Mức độ an toàn */}
+            <TouchableOpacity
+              style={styles.statusChip}
+              onPress={() => onNavigateTab && onNavigateTab('Alerts')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.chipDot, { backgroundColor: dangerCount > 0 ? COLORS.danger : COLORS.success }]} />
+              <Text style={styles.chipText}>
+                {dangerCount > 0 ? `${dangerCount} Báo động` : 'An toàn'}
               </Text>
-            </View>
-            <Ionicons name="power" size={18} color={isLightOn ? '#CA8A04' : COLORS.textMuted} />
-          </TouchableOpacity>
-        </View>
+            </TouchableOpacity>
+          </View>
 
-        {/* Thẻ RFID vừa quẹt Card */}
-        {rfidInfo?.lastUid ? (
-          <View style={styles.rfidBannerCard}>
-            <View style={[styles.rfidIconCircle, { backgroundColor: rfidInfo.isValid ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }]}>
-              <Ionicons
-                name="card"
-                size={20}
-                color={rfidInfo.isValid ? COLORS.success : COLORS.danger}
-              />
-            </View>
-            <View style={{ flex: 1, paddingHorizontal: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.rfidTitle}>Thẻ RFID:</Text>
-                <Text style={styles.rfidUid}>{rfidInfo.lastUid}</Text>
+          {/* ========================================================================= */}
+          {/* CẢM BIẾN MÔI TRƯỜNG PHẦN CỨNG DHT11 (HERO CLIMATE WIDGET NGUYÊN KHỐI) */}
+          {/* ========================================================================= */}
+          <TempHumidityCard tempSensor={tempSensor} humSensor={humSensor} />
+
+          {/* ========================================================================= */}
+          {/* TRUNG TÂM ĐIỀU KHIỂN & AN NINH (2 SMART TILES SẮC NÉT) */}
+          {/* ========================================================================= */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Thiết Bị & An Ninh Cửa Cổng</Text>
+            <TouchableOpacity onPress={() => onNavigateTab && onNavigateTab('Gate')}>
+              <Text style={styles.sectionAction}>Chi tiết</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.quickControlsRow}>
+            {/* Widget 1: Cổng An Ninh Ra Vào - Tích hợp trạng thái thẻ RFID */}
+            <TouchableOpacity
+              style={[
+                styles.smartTile,
+                gateState.isOpen ? styles.tileActiveGate : styles.tileNormal,
+              ]}
+              onPress={() => toggleGate('Bảng điều khiển nhanh')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.tileHeaderRow}>
+                <View style={[styles.tileIconBox, { backgroundColor: gateState.isOpen ? '#FEF3C7' : '#EFF6FF' }]}>
+                  <Ionicons
+                    name={gateState.isOpen ? 'lock-open' : 'lock-closed'}
+                    size={20}
+                    color={gateState.isOpen ? COLORS.warning : COLORS.primary}
+                  />
+                </View>
+                {/* Nút nguồn mini phản hồi trạng thái */}
+                <View style={[styles.tilePowerBtn, { backgroundColor: gateState.isOpen ? '#FDE68A' : COLORS.cardSubtle }]}>
+                  <Ionicons
+                    name="power"
+                    size={13}
+                    color={gateState.isOpen ? '#B45309' : COLORS.textMuted}
+                  />
+                </View>
               </View>
-              <Text style={styles.rfidSub}>
-                {rfidInfo.isValid ? '✓ Xác thực mở cửa thành công' : '✕ Thẻ không khớp'} • {rfidInfo.lastScanTime || 'Vừa xong'}
-              </Text>
-            </View>
-            <View style={[styles.rfidStatusBadge, { backgroundColor: rfidInfo.isValid ? COLORS.successMuted : COLORS.dangerMuted }]}>
-              <Text style={[styles.rfidStatusText, { color: rfidInfo.isValid ? COLORS.success : COLORS.danger }]}>
-                {rfidInfo.isValid ? 'HỢP LỆ' : 'TỪ CHỐI'}
-              </Text>
-            </View>
-          </View>
-        ) : null}
 
-        {/* Cổng ra vào (Door / Entrance Gate) */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Cổng Kiểm Soát Ra Vào</Text>
-          <TouchableOpacity onPress={() => onNavigateTab && onNavigateTab('Gate')}>
-            <Text style={styles.sectionAction}>Chi tiết</Text>
+              <View style={styles.tileFooter}>
+                <Text style={styles.tileTitle}>Cổng ra vào</Text>
+                <Text style={[styles.tileStatus, { color: gateState.isOpen ? COLORS.warning : COLORS.textSecondary }]}>
+                  {gateState.isOpen ? 'Đang mở' : 'Đã khóa'}
+                </Text>
+
+                {/* TÍCH HỢP TRẠNG THÁI RFID TRỰC TIẾP VÀO CỔNG */}
+                <View style={styles.gateRfidMiniTag}>
+                  <Ionicons
+                    name="card"
+                    size={11}
+                    color={rfidInfo?.lastUid ? (rfidInfo.isValid ? COLORS.success : COLORS.danger) : COLORS.textMuted}
+                  />
+                  <Text style={styles.gateRfidMiniText} numberOfLines={1}>
+                    {rfidInfo?.lastUid
+                      ? `${rfidInfo.lastUid} • ${rfidInfo.isValid ? 'Hợp lệ' : 'Từ chối'}`
+                      : 'Chờ quẹt RFID'}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* Widget 2: Điều khiển Đèn LED D2 bo mạch ESP32 */}
+            <TouchableOpacity
+              style={[
+                styles.smartTile,
+                isLightOn ? styles.tileActiveLight : styles.tileNormal,
+              ]}
+              onPress={toggleLight}
+              activeOpacity={0.8}
+            >
+              <View style={styles.tileHeaderRow}>
+                <View style={[styles.tileIconBox, { backgroundColor: isLightOn ? '#FEF9C3' : '#F1F5F9' }]}>
+                  <Ionicons
+                    name={isLightOn ? 'bulb' : 'bulb-outline'}
+                    size={20}
+                    color={isLightOn ? '#CA8A04' : COLORS.textMuted}
+                  />
+                </View>
+                {/* Nút nguồn mini phản hồi trạng thái */}
+                <View style={[styles.tilePowerBtn, { backgroundColor: isLightOn ? '#FEF08A' : COLORS.cardSubtle }]}>
+                  <Ionicons
+                    name="power"
+                    size={13}
+                    color={isLightOn ? '#CA8A04' : COLORS.textMuted}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.tileFooter}>
+                <Text style={styles.tileTitle}>Đèn LED (D2)</Text>
+                <Text style={[styles.tileStatus, { color: isLightOn ? '#CA8A04' : COLORS.textSecondary }]}>
+                  {isLightOn ? 'Bật sáng' : 'Tắt'}
+                </Text>
+
+                {/* Chú thích chân phần cứng */}
+                <View style={styles.ledHardwareMiniTag}>
+                  <Ionicons name="hardware-chip-outline" size={11} color="#854D0E" />
+                  <Text style={styles.ledHardwareMiniText}>GPIO 2 • ESP32</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Cảm biến nước (nếu có kích hoạt) */}
+          {waterSensor && <WaterSensorCard sensor={waterSensor} />}
+
+          {/* Cảm biến âm thanh (nếu có kích hoạt) */}
+          {soundSensor && <SoundSensorCard sensor={soundSensor} />}
+
+          {/* Các cảm biến tùy biến người dùng tự tạo thêm */}
+          {customSensors.length > 0 && (
+            <>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Cảm Biến Mở Rộng</Text>
+                <Text style={styles.customCount}>{customSensors.length} thiết bị</Text>
+              </View>
+              {customSensors.map(sensor => (
+                <GenericSensorCard key={sensor.id} sensor={sensor} />
+              ))}
+            </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* NÚT THÊM CẢM BIẾN MỚI THANH LỊCH (KHÔNG DÙNG NÉT ĐỨT THÔ) */}
+          {/* ========================================================================= */}
+          <TouchableOpacity
+            style={styles.addSensorCompactCard}
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.addMiniIconCircle}>
+              <Ionicons name="add" size={18} color={COLORS.primary} />
+            </View>
+            <Text style={styles.addCompactTitle}>Thêm cảm biến hoặc thiết bị mới</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
           </TouchableOpacity>
         </View>
-        <GateControlCard onNavigateToGate={() => onNavigateTab && onNavigateTab('Gate')} />
-
-        {/* Core Sensors - Cảm biến phần cứng thực tế (DHT11 Nhiệt độ & Độ ẩm) */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Cảm Biến Môi Trường (DHT11)</Text>
-          <TouchableOpacity onPress={() => onNavigateTab && onNavigateTab('History')}>
-            <Text style={styles.sectionAction}>Lịch sử đo</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Cảm biến Nhiệt độ & Độ ẩm vật lý (DHT11) */}
-        <TempHumidityCard tempSensor={tempSensor} humSensor={humSensor} />
-
-        {/* Cảm biến Nước (Nếu có mở rộng kết nối thêm) */}
-        {waterSensor && <WaterSensorCard sensor={waterSensor} />}
-
-        {/* Cảm biến Âm thanh (Nếu có mở rộng kết nối thêm) */}
-        {soundSensor && <SoundSensorCard sensor={soundSensor} />}
-
-        {/* Dynamic / Additional Sensors (Future expansion) */}
-        {customSensors.length > 0 && (
-          <>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Cảm Biến Mở Rộng Thêm</Text>
-              <Text style={styles.customCount}>{customSensors.length} thiết bị</Text>
-            </View>
-            {customSensors.map(sensor => (
-              <GenericSensorCard key={sensor.id} sensor={sensor} />
-            ))}
-          </>
-        )}
-
-        {/* Big Add Sensor CTA Card */}
-        <TouchableOpacity
-          style={styles.addSensorCard}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.addIconCircle}>
-            <Ionicons name="add" size={28} color={COLORS.primaryLight} />
-          </View>
-          <View style={styles.addTextContainer}>
-            <Text style={styles.addTitle}>Thêm Cảm Biến Mới</Text>
-            <Text style={styles.addSubtitle}>
-              Mở rộng hệ thống: Khí gas, Ánh sáng, Chuyển động PIR, Độ ẩm đất...
-            </Text>
-          </View>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Add Sensor Modal */}
+      {/* Hộp thoại thêm cảm biến mới */}
       <AddSensorModal visible={modalVisible} onClose={() => setModalVisible(false)} />
     </View>
   );
@@ -225,188 +253,195 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SIZES.lg,
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 40,
   },
-  summaryBar: {
+  responsiveWrapper: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+  },
+  // Hàng Status Chips ngang siêu thanh thoát
+  statusChipsRow: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusLg,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: SIZES.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    ...SHADOWS.small,
+    gap: 8,
+    marginBottom: 12,
   },
-  summaryItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  summaryNum: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  summaryDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: COLORS.border,
-  },
-  quickControlsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: SIZES.md,
-  },
-  quickControlCard: {
+  statusChip: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: SIZES.radiusLg,
-    borderWidth: 1,
-    gap: 12,
-    ...SHADOWS.small,
-  },
-  controlCardNormal: {
-    backgroundColor: COLORS.cardBg,
-    borderColor: COLORS.border,
-  },
-  controlCardActiveWarning: {
-    backgroundColor: COLORS.warningMuted,
-    borderColor: COLORS.warningBorder,
-  },
-  controlCardActiveLight: {
-    backgroundColor: '#FEF9C3',
-    borderColor: '#FDE047',
-  },
-  controlIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: COLORS.cardBg,
+    borderRadius: SIZES.radiusFull,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 6,
+    ...SHADOWS.small,
   },
-  controlTitle: {
-    fontSize: 14,
+  chipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  chipText: {
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  controlStatus: {
-    fontSize: 12,
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  rfidBannerCard: {
+  // Bảng điều khiển nhanh 2 widget
+  quickControlsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  smartTile: {
+    flex: 1,
     backgroundColor: COLORS.cardBg,
     borderRadius: SIZES.radiusLg,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    padding: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: SIZES.md,
+    justifyContent: 'space-between',
+    minHeight: 110,
     ...SHADOWS.small,
   },
-  rfidIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  tileNormal: {
+    backgroundColor: COLORS.cardBg,
+    borderColor: COLORS.border,
+  },
+  tileActiveGate: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  tileActiveLight: {
+    backgroundColor: '#FEFCE8',
+    borderColor: '#FEF08A',
+  },
+  tileHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tileIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rfidTitle: {
+  tilePowerBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  tileFooter: {
+    marginTop: 8,
+  },
+  tileTitle: {
     fontSize: 13,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
-  rfidUid: {
-    fontSize: 14,
-    color: COLORS.primary,
     fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    letterSpacing: 0.5,
+    color: COLORS.textPrimary,
   },
-  rfidSub: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  rfidStatusBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: SIZES.radiusSm,
-  },
-  rfidStatusText: {
+  tileStatus: {
     fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    marginTop: 1,
   },
+  // Tag RFID tích hợp trong Cổng
+  gateRfidMiniTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.cardSubtle,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  gateRfidMiniText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    flex: 1,
+  },
+  // Tag LED GPIO
+  ledHardwareMiniTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF9C3',
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#FDE047',
+  },
+  ledHardwareMiniText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#854D0E',
+    flex: 1,
+  },
+  // Section Headers
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: SIZES.md,
-    marginBottom: SIZES.sm,
+    marginTop: 2,
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
   sectionAction: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: COLORS.primary,
   },
   customCount: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontWeight: '600',
   },
-  addSensorCard: {
+  // Nút thêm cảm biến gọn gàng
+  addSensorCompactCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryMuted,
-    borderRadius: SIZES.radiusLg,
-    padding: SIZES.lg,
-    borderWidth: 1.5,
-    borderColor: COLORS.primaryBorder,
-    borderStyle: 'dashed',
-    marginTop: SIZES.sm,
-    gap: 14,
-  },
-  addIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.cardBg,
+    borderRadius: SIZES.radiusMd,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...SHADOWS.small,
   },
-  addTextContainer: {
-    flex: 1,
+  addMiniIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: COLORS.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
-  addTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primaryDark,
-  },
-  addSubtitle: {
+  addCompactTitle: {
     fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-    lineHeight: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    flex: 1,
   },
 });

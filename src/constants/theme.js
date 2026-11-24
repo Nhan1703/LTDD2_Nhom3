@@ -11,7 +11,7 @@ export const COLORS = {
   primaryMuted: '#EFF6FF',   // Nền tag xanh nhạt (Blue 50)
   primaryBorder: '#BFDBFE',  // Viền xanh nhạt (Blue 200)
 
-  // Nhóm màu phụ trợ (Secondary)
+  // Nhóm màu phụ trợ (Secondary & Accent)
   secondary: '#0D9488',      // Xanh mòng két (Teal 600)
   secondaryLight: '#14B8A6',
   secondaryMuted: '#F0FDFA',
@@ -19,6 +19,7 @@ export const COLORS = {
 
   accent: '#4F46E5',         // Tím chàm cao cấp (Indigo 600)
   accentMuted: '#EEF2FF',
+  accentBorder: '#C7D2FE',
 
   // Nhóm màu trạng thái ngữ nghĩa chuẩn WCAG AAA (Semantic Status)
   success: '#059669',        // Xanh lá an toàn (Emerald 600)
@@ -57,13 +58,15 @@ export const COLORS = {
   background: '#F8FAFC',     // Nền toàn trang sáng tinh tế (Slate 50 - không gây chói mắt)
   cardBg: '#FFFFFF',         // Nền thẻ Card màu trắng tinh khiết
   cardBgHover: '#F1F5F9',    // Nền thẻ khi hover (Slate 100)
+  cardSubtle: '#F8FAFC',     // Nền khối phụ bên trong thẻ
   surface: '#FFFFFF',
   border: '#E2E8F0',         // Viền thẻ xám nhạt tinh tế 1px (Slate 200)
-  borderLight: '#CBD5E1',    // Viền phân tách (Slate 300)
+  borderLight: '#F1F5F9',    // Viền phân tách nhẹ (Slate 100)
+  borderFocus: '#93C5FD',    // Viền khi được chọn (Blue 300)
 
   // Phông chữ độ tương phản cao vượt chuẩn WCAG AAA (> 7:1)
   textPrimary: '#0F172A',    // Chữ tiêu đề và nội dung chính: Đen than (Slate 900)
-  textSecondary: '#334155',  // Chữ phụ, mô tả: Xám than đậm (Slate 700)
+  textSecondary: '#475569',  // Chữ phụ, mô tả: Xám than đậm (Slate 600)
   textMuted: '#64748B',      // Chữ nhãn thời gian, icon mờ: Xám Slate 500 (rõ ràng, không bị chìm)
   textInverse: '#FFFFFF',    // Chữ màu trắng trên nền tối/nút bấm
 
@@ -81,34 +84,34 @@ export const SIZES = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
-  radiusSm: 8,
-  radiusMd: 12,
-  radiusLg: 16,
-  radiusXl: 20,
+  radiusSm: 10,
+  radiusMd: 14,
+  radiusLg: 18,
+  radiusXl: 24,
   radiusFull: 9999,
 };
 
-// Hiệu ứng bóng đổ thanh lịch, mềm mại cho giao diện sáng
+// Hiệu ứng bóng đổ thanh lịch, mềm mại cho giao diện sáng trên cả iOS và Android
 export const SHADOWS = {
   small: {
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     elevation: 2,
   },
   medium: {
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 3,
   },
   large: {
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    elevation: 6,
   },
 };
