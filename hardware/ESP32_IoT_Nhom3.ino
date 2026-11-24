@@ -437,6 +437,20 @@ void xoaLenhCongFirebase() {
   client.stop();
 }
 
+// Xóa lệnh đèn vừa xử lý trên Firebase để tránh giật trạng thái và lặp click
+void xoaLenhDenFirebase() {
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(2);
+  HTTPClient http;
+  String url = String(firebaseUrl) + "/smart_home/commands.json";
+  http.begin(client, url);
+  http.addHeader("Content-Type", "application/json");
+  http.PATCH("{\"light\":null}");
+  http.end();
+  client.stop();
+}
+
 // Kiểm tra lệnh điều khiển từ App thông qua Firebase (/smart_home/commands.json) với phản hồi siêu tốc (< 250ms)
 void kiemTraLenhFirebase() {
   if (WiFi.status() != WL_CONNECTED) return;
@@ -470,11 +484,17 @@ void kiemTraLenhFirebase() {
       }
     }
 
-    // Kiểm tra lệnh bật hoặc tắt đèn từ Firebase
-    if (payload.indexOf("\"light\":true") >= 0 && !trangThaiDen) {
-      datTrangThaiDen(true, "Firebase App");
-    } else if (payload.indexOf("\"light\":false") >= 0 && trangThaiDen) {
-      datTrangThaiDen(false, "Firebase App");
+    // Kiểm tra lệnh bật hoặc tắt đèn từ Firebase (xóa lệnh ngay lập tức để chống trùng lặp click và giật trạng thái)
+    if (payload.indexOf("\"light\":true") >= 0) {
+      xoaLenhDenFirebase();
+      if (!trangThaiDen) {
+        datTrangThaiDen(true, "Firebase App");
+      }
+    } else if (payload.indexOf("\"light\":false") >= 0) {
+      xoaLenhDenFirebase();
+      if (trangThaiDen) {
+        datTrangThaiDen(false, "Firebase App");
+      }
     }
   }
   http.end();

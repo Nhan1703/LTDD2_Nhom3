@@ -49,6 +49,8 @@ export const IoTProvider = ({ children }) => {
   const autoCloseTimerRef = useRef(null);
   // Khóa thời gian chống giật trạng thái khi người dùng thao tác đóng/mở cổng
   const lastGateToggleTimeRef = useRef(0);
+  // Khóa thời gian chống giật và chống trùng lặp click khi người dùng bật/tắt đèn LED
+  const lastLightToggleTimeRef = useRef(0);
 
   // Tải trạng thái đã lưu trữ từ bộ nhớ LocalStorage trên trình duyệt / điện thoại khi mở ứng dụng
   useEffect(() => {
@@ -211,7 +213,15 @@ export const IoTProvider = ({ children }) => {
         if (data) {
           setIsHardwareConnected(true);
           if (activeSource) setConnectionSource(activeSource);
-          if (data.light !== undefined) setIsLightOn(Boolean(data.light));
+
+          // Đồng bộ trạng thái đèn từ ESP32 / Firebase Cloud
+          // Áp dụng khóa chống giật (Lock 4.5 giây): Bỏ qua dữ liệu telemetry cũ từ Cloud ngay sau khi người dùng bấm nút
+          if (data.light !== undefined) {
+            const timeSinceLightToggle = Date.now() - lastLightToggleTimeRef.current;
+            if (timeSinceLightToggle > 4500) {
+              setIsLightOn(Boolean(data.light));
+            }
+          }
 
           // Tự động lưu địa chỉ IP của ESP32 khi nhận được từ Firebase hoặc LAN
           if (data.ip && typeof data.ip === 'string' && data.ip.trim().length > 0) {
@@ -298,26 +308,43 @@ export const IoTProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isSimulating, networkConfig.hardwareServerUrl, networkConfig.firebaseUrl, networkConfig.useFirebase]);
 
-  // Điều khiển BẬT / TẮT đèn LED D2 từ App / Web
+  // Điều khiển BẬT / TẮT đèn LED D2 từ App / Web với cơ chế chống dội phím và chống giật Cloud
   const toggleLight = async () => {
+    const now = Date.now();
+    // 1. Chống nhấn lặp (Debounce / Cooldown 700ms): Bỏ qua nếu người dùng bấm quá nhanh hoặc màn hình nhận đúp click
+    if (now - lastLightToggleTimeRef.current < 700) {
+      return;
+    }
+    // Ghi nhận mốc thời gian bấm để kích hoạt khóa chống giật 4.5 giây
+    lastLightToggleTimeRef.current = now;
+
     const nextState = !isLightOn;
 
-    // Cập nhật giao diện ngay lập tức không có độ trễ
+    // Cập nhật giao diện ngay lập tức không có độ trễ (Optimistic UI)
     setIsLightOn(nextState);
 
-    // 1. Gửi lệnh tới Firebase Realtime Database tức thì (/smart_home/commands.json)
+    // 2. Gửi lệnh tới Firebase Realtime Database (/smart_home/commands.json)
+    // Đồng thời cập nhật trạng thái mới trực tiếp lên telemetry.json để tránh xung đột dữ liệu cũ
     try {
       const fbUrl = (networkConfig.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app').replace(/\/+$/, '');
       if (fbUrl) {
+        // Gửi lệnh điều khiển cho ESP32 nhận và xử lý phần cứng
         fetch(`${fbUrl}/smart_home/commands.json`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ light: nextState }),
         }).catch(err => console.log('Firebase light command error:', err));
+
+        // Cập nhật ngay lập tức telemetry trên Cloud để không bị polling kéo ngược về trạng thái cũ
+        fetch(`${fbUrl}/smart_home/telemetry.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ light: nextState }),
+        }).catch(err => console.log('Firebase light telemetry patch error:', err));
       }
     } catch (e) {}
 
-    // 2. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
+    // 3. Gửi lệnh song song tới Local Web Server ESP32 qua mạng LAN (chỉ khi không chạy trên HTTPS Web để không bị trễ)
     const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
     if (!isHttps) {
       try {

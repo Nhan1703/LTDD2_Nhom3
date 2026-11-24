@@ -5,7 +5,7 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useIoT } from '../context/IoTContext';
 
 export default function SoundSensorCard({ sensor }) {
-  const { triggerSimulationEvent, toggleLight } = useIoT();
+  const { triggerSimulationEvent, toggleLight, isLightOn } = useIoT();
   if (!sensor) return null;
 
   const value = Math.round(sensor.value);
@@ -92,23 +92,23 @@ export default function SoundSensorCard({ sensor }) {
           <Text style={styles.footerText}>Ngưỡng báo động: {sensor.dangerThreshold} dB</Text>
         </View>
 
-        {/* Light status indicator & manual toggle */}
+        {/* Chỉ báo trạng thái đèn & nút bật/tắt thủ công */}
         <TouchableOpacity
-          style={[styles.lightBadge, sensor.isLightOn ? styles.lightOnBadge : styles.lightOffBadge]}
+          style={[styles.lightBadge, isLightOn ? styles.lightOnBadge : styles.lightOffBadge]}
           onPress={toggleLight}
           activeOpacity={0.7}
         >
           <Ionicons
-            name={sensor.isLightOn ? "bulb" : "bulb-outline"}
+            name={isLightOn ? "bulb" : "bulb-outline"}
             size={18}
-            color={sensor.isLightOn ? COLORS.warning : COLORS.textTertiary}
+            color={isLightOn ? COLORS.warning : COLORS.textTertiary}
           />
-          <Text style={[styles.lightBadgeText, sensor.isLightOn && styles.lightOnText]}>
-            {sensor.isLightOn ? '💡 Đèn D5: ĐANG BẬT SÁNG' : '💡 Đèn D5: Đang tắt (Tự bật khi ồn)'}
+          <Text style={[styles.lightBadgeText, isLightOn && styles.lightOnText]}>
+            {isLightOn ? '💡 Đèn LED (D2): ĐANG BẬT SÁNG' : '💡 Đèn LED (D2): Đang tắt (Tự bật khi ồn)'}
           </Text>
-          <View style={[styles.togglePill, sensor.isLightOn ? styles.togglePillActive : styles.togglePillInactive]}>
-            <Text style={[styles.togglePillText, sensor.isLightOn && styles.togglePillTextActive]}>
-              {sensor.isLightOn ? 'ĐANG BẬT' : 'BẬT THỬ'}
+          <View style={[styles.togglePill, isLightOn ? styles.togglePillActive : styles.togglePillInactive]}>
+            <Text style={[styles.togglePillText, isLightOn && styles.togglePillTextActive]}>
+              {isLightOn ? 'ĐANG BẬT' : 'BẬT THỬ'}
             </Text>
           </View>
         </TouchableOpacity>
