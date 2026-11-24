@@ -80,8 +80,8 @@ export const IoTProvider = ({ children }) => {
       }
       const savedSettings = await StorageService.getSettings();
       if (savedSettings) {
-        if (!savedSettings.hardwareServerUrl || savedSettings.hardwareServerUrl.includes('192.168.1.100')) {
-          savedSettings.hardwareServerUrl = 'http://192.168.1.6:5000';
+        if (!savedSettings.hardwareServerUrl || savedSettings.hardwareServerUrl.includes('192.168.1.100') || savedSettings.hardwareServerUrl.includes(':5000')) {
+          savedSettings.hardwareServerUrl = 'http://192.168.1.6';
         }
         if (!savedSettings.firebaseUrl || savedSettings.firebaseUrl.includes('smart-iot-group3') || !savedSettings.firebaseUrl.includes('ltdd-945a5')) {
           savedSettings.firebaseUrl = 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app';
@@ -143,11 +143,8 @@ export const IoTProvider = ({ children }) => {
       return;
     }
 
-    let rawUrl = networkConfig.hardwareServerUrl || 'http://192.168.1.6:5000';
-    let url = rawUrl.replace('192.168.1.100', '192.168.1.6');
-    if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-      url = 'http://localhost:5000';
-    }
+    let rawUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
+    let url = rawUrl.replace(':5000', '');
 
     const fbUrl = (networkConfig.firebaseUrl || 'https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app').replace(/\/+$/, '');
     const isHttpsWeb = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
@@ -348,9 +345,10 @@ export const IoTProvider = ({ children }) => {
     const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
     if (!isHttps) {
       try {
+        // Ưu tiên địa chỉ IP thực tế của ESP32 phát hiện được từ Firebase hoặc cấu hình
         let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
-        if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-          targetUrl = 'http://localhost:5000';
+        if (targetUrl.includes(':5000')) {
+          targetUrl = targetUrl.replace(':5000', '');
         }
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 400);
@@ -418,8 +416,8 @@ export const IoTProvider = ({ children }) => {
         if (!isHttpsEnv) {
           try {
             let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
-            if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-              targetUrl = 'http://localhost:5000';
+            if (targetUrl.includes(':5000')) {
+              targetUrl = targetUrl.replace(':5000', '');
             }
             fetch(`${targetUrl}/api/gate`, {
               method: 'POST',
@@ -505,9 +503,10 @@ export const IoTProvider = ({ children }) => {
     const isHttpsWebContext = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
     if (!isHttpsWebContext) {
       try {
+        // Ưu tiên địa chỉ IP thực tế của ESP32 phát hiện được từ Firebase hoặc cấu hình
         let targetUrl = detectedEsp32Ip || networkConfig.hardwareServerUrl || 'http://192.168.1.6';
-        if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
-          targetUrl = 'http://localhost:5000';
+        if (targetUrl.includes(':5000')) {
+          targetUrl = targetUrl.replace(':5000', '');
         }
 
         const controller = new AbortController();
