@@ -570,8 +570,7 @@ void ketNoiWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    // Cấu hình Google DNS 8.8.8.8 chống lỗi nghẽn DNS trên iPhone/4G Hotspot (172.20.10.x)
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, IPAddress(8, 8, 8, 8), IPAddress(8, 8, 4, 4));
+    // Để router / điện thoại cấp phát IP và DNS tự động qua DHCP, không can thiệp tĩnh làm hỏng IP
     Serial.println("\n[WIFI] KET NOI THANH CONG! IP: " + WiFi.localIP().toString());
     hienThi("WIFI CONNECTED", WiFi.localIP().toString());
     delay(1500);
