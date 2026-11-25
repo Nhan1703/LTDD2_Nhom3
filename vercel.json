@@ -4,6 +4,18 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/swagger",
+      "destination": "/swagger.html"
+    },
+    {
+      "source": "/swagger.html",
+      "destination": "/swagger.html"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/openapi.json"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

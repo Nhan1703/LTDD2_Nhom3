@@ -1,0 +1,10 @@
+{
+  "name": "iot-smart-home-backend",
+  "version": "1.0.0",
+  "description": "Backend API Serverless & Swagger Documentation cho Đồ án LTDD Nhóm 3",
+  "main": "api/sensors.js",
+  "scripts": {
+    "start": "node api/sensors.js"
+  },
+  "dependencies": {}
+}

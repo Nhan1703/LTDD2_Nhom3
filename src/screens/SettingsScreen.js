@@ -318,6 +318,42 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Nhóm: Tài Liệu API & Swagger */}
+        <Text style={styles.sectionHeader}>Tài Liệu API & Kiểm Thử</Text>
+
+        {/* Thẻ Tài liệu Swagger UI */}
+        <View style={styles.card}>
+          <View style={styles.rowBetween}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <View style={styles.cardTitleRow}>
+                <Ionicons name="code-slash-outline" size={18} color={COLORS.primary} />
+                <Text style={styles.cardTitle}>Tài Liệu API (Swagger UI)</Text>
+              </View>
+              <Text style={styles.cardSubtitle}>
+                Xem đặc tả chuẩn OpenAPI 3.0 và gửi lệnh chạy thử trực tiếp (Try it out) cho các API LAN ESP32 & Firebase Cloud.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.swaggerBtn}
+              onPress={() => {
+                if (typeof window !== 'undefined' && window.open) {
+                  window.open('/swagger.html', '_blank');
+                } else {
+                  Alert.alert(
+                    'Swagger API UI',
+                    'Bạn có thể truy cập tài liệu Swagger tại đường dẫn:\nhttps://ltdd2nhom3.vercel.app/swagger.html'
+                  );
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="open-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.swaggerBtnText}>Mở Swagger</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Nhóm 3: Vận hành */}
         <Text style={styles.sectionHeader}>Vận Hành</Text>
 
@@ -646,6 +682,22 @@ const styles = StyleSheet.create({
   },
   resetCompactBtnText: {
     color: COLORS.danger,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  swaggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: SIZES.radiusSm,
+  },
+  swaggerBtnText: {
+    color: COLORS.primary,
     fontSize: 12,
     fontWeight: '700',
   },

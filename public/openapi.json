@@ -1,0 +1,318 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hệ Thống IoT Nhóm 3 - Smart Home & Kiểm Soát Cổng Ra Vào",
+    "description": "Tài liệu đặc tả toàn bộ REST API của đồ án Lập Trình Di Động (LTDD) - Nhóm 3.\nHệ thống kết nối bo mạch vi điều khiển ESP32 với Cloud Firebase Realtime Database và ứng dụng Web/Mobile React Native.\n\n### 2 Cơ chế truyền thông chính:\n1. **Firebase Realtime Database (Cloud REST API)**: Điều khiển từ xa qua Internet qua giao thức HTTPS.\n2. **ESP32 Local Web Server (Mạng LAN Port 80)**: Giao tiếp cục bộ trực tiếp với vi điều khiển khi dùng chung mạng Wi-Fi (phản hồi siêu tốc < 15ms).",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Nhóm 3 - Đồ Án Lập Trình Di Động",
+      "url": "https://ltdd2nhom3.vercel.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      "description": "Firebase Cloud Realtime Database (Toàn cầu qua Internet)"
+    },
+    {
+      "url": "http://172.20.10.12",
+      "description": "ESP32 Local Web Server (Mạng LAN nội bộ Wi-Fi)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Phần Cứng ESP32 (LAN Port 80)",
+      "description": "Các endpoint giao tiếp trực tiếp với Web Server nhúng trên vi điều khiển ESP32"
+    },
+    {
+      "name": "Firebase Cloud (Đám Mây)",
+      "description": "Các endpoint đồng bộ dữ liệu cảm biến và tiếp nhận lệnh điều khiển từ xa qua Firebase REST API"
+    }
+  ],
+  "paths": {
+    "/api/sensors": {
+      "get": {
+        "tags": ["Phần Cứng ESP32 (LAN Port 80)"],
+        "summary": "Lấy dữ liệu cảm biến & trạng thái phần cứng thời gian thực",
+        "description": "Trả về toàn bộ dữ liệu cảm biến DHT11 (Nhiệt độ, Độ ẩm), trạng thái động cơ Servo cổng, đèn LED, thẻ RFID vừa quẹt và IP của ESP32.",
+        "responses": {
+          "200": {
+            "description": "Dữ liệu cảm biến thời gian thực",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gate": {
+      "post": {
+        "tags": ["Phần Cứng ESP32 (LAN Port 80)"],
+        "summary": "Điều khiển Đóng / Mở cổng ra vào (Servo SG90)",
+        "description": "Gửi lệnh xoay động cơ Servo ở GPIO 13 để mở hoặc khóa cổng an toàn.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateControlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Điều khiển cổng thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "gate": { "type": "boolean", "example": true, "description": "Trạng thái cổng mới (true: Mở, false: Đóng)" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/light": {
+      "post": {
+        "tags": ["Phần Cứng ESP32 (LAN Port 80)"],
+        "summary": "Điều khiển Bật / Tắt đèn chiếu sáng (LED D2)",
+        "description": "Gửi lệnh bật hoặc tắt chân GPIO 2 trên bo mạch ESP32 ngay lập tức (< 15ms).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LightControlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Điều khiển đèn thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "light": { "type": "boolean", "example": true, "description": "Trạng thái đèn mới (true: Sáng, false: Tắt)" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfid/reset": {
+      "post": {
+        "tags": ["Phần Cứng ESP32 (LAN Port 80)"],
+        "summary": "Xóa thẻ Master RFID khỏi bộ nhớ Flash",
+        "description": "Xóa mã thẻ Master đã lưu trong bộ nhớ Non-volatile Flash Preferences để cho phép học thẻ Master mới.",
+        "responses": {
+          "200": {
+            "description": "Đã xóa thẻ Master thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Da xoa the Master thanh cong" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/smart_home/telemetry.json": {
+      "get": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "Đọc dữ liệu cảm biến từ Firebase Cloud",
+        "description": "Ứng dụng Web / App gọi định kỳ để lấy thông số môi trường và trạng thái phần cứng.",
+        "responses": {
+          "200": {
+            "description": "Dữ liệu telemetry lưu trên Firebase Realtime Database",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "ESP32 ghi đè gói tin đo đạc lên Firebase",
+        "description": "ESP32 cập nhật định kỳ mỗi 10 giây hoặc ngay khi có biến cố phần cứng.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryResponse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thành công lên Firebase Cloud"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "Cập nhật trạng thái từng phần (Optimistic UI)",
+        "description": "Web / Mobile App cập nhật tức thì trạng thái Đèn hoặc Cổng để chống giật giao diện khi chờ ESP32 phản hồi.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gate": { "type": "boolean", "example": true },
+                  "light": { "type": "boolean", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thành công"
+          }
+        }
+      }
+    },
+    "/smart_home/commands.json": {
+      "get": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "ESP32 đọc hàng đợi lệnh điều khiển từ xa",
+        "description": "ESP32 gọi mỗi 400ms để kiểm tra xem người dùng có vừa bấm Mở cổng hay Bật đèn từ Web hay không.",
+        "responses": {
+          "200": {
+            "description": "Hàng đợi lệnh điều khiển",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "gate": { "type": "boolean", "nullable": true, "example": true, "description": "Lệnh điều khiển cổng (true: Mở, false: Đóng, null: Không có lệnh)" },
+                    "light": { "type": "boolean", "nullable": true, "example": false, "description": "Lệnh điều khiển đèn (true: Bật, false: Tắt, null: Không có lệnh)" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "Web / App gửi lệnh điều khiển hoặc ESP32 dọn dẹp lệnh",
+        "description": "Người dùng gửi `{ gate: true }` hoặc `{ light: true }` để kích hoạt thiết bị. Sau khi nhận lệnh, ESP32 gửi `{ gate: null, light: null }` để dọn dẹp hàng đợi.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gate": { "type": "boolean", "nullable": true, "example": true },
+                  "light": { "type": "boolean", "nullable": true, "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đã ghi nhận lệnh điều khiển lên Cloud"
+          }
+        }
+      }
+    },
+    "/smart_home.json": {
+      "get": {
+        "tags": ["Firebase Cloud (Đám Mây)"],
+        "summary": "Lấy toàn bộ cây dữ liệu hệ thống Smart Home",
+        "description": "Đọc toàn bộ cả nhánh commands và telemetry của hệ thống cùng lúc.",
+        "responses": {
+          "200": {
+            "description": "Toàn bộ dữ liệu Smart Home",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "telemetry": { "$ref": "#/components/schemas/TelemetryResponse" },
+                    "commands": {
+                      "type": "object",
+                      "properties": {
+                        "gate": { "type": "boolean", "nullable": true },
+                        "light": { "type": "boolean", "nullable": true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TelemetryResponse": {
+        "type": "object",
+        "properties": {
+          "temp": { "type": "number", "format": "float", "example": 28.5, "description": "Nhiệt độ môi trường phòng khách đo bởi DHT11 (°C)" },
+          "hum": { "type": "number", "format": "float", "example": 75, "description": "Độ ẩm không khí phòng khách đo bởi DHT11 (%)" },
+          "dht_ok": { "type": "boolean", "example": true, "description": "Trạng thái hoạt động bình thường của cảm biến DHT11" },
+          "gate": { "type": "boolean", "example": false, "description": "Trạng thái cửa cổng an ninh (true: Đang mở, false: Đã khóa)" },
+          "light": { "type": "boolean", "example": false, "description": "Trạng thái đèn LED D2 (true: Đang bật, false: Đang tắt)" },
+          "flame": { "type": "boolean", "example": false, "description": "Cảnh báo cháy lửa" },
+          "flame_val": { "type": "integer", "example": 0, "description": "Giá trị cảm biến lửa" },
+          "rfid": { "type": "string", "example": "620F0307", "description": "Mã UID thẻ RFID RC522 vừa quẹt gần nhất" },
+          "master": { "type": "string", "example": "620F0307", "description": "Mã UID thẻ Master đang được lưu trong Flash" },
+          "ip": { "type": "string", "example": "http://172.20.10.12", "description": "Địa chỉ IP nội bộ của ESP32 để kết nối LAN trực tiếp" },
+          "updatedAt": { "type": "integer", "example": 451200, "description": "Mốc thời gian vi điều khiển hoạt động (millis)" }
+        }
+      },
+      "GateControlRequest": {
+        "type": "object",
+        "required": ["open"],
+        "properties": {
+          "open": { "type": "boolean", "example": true, "description": "true: Mở cổng, false: Đóng và khóa an toàn" },
+          "action": { "type": "string", "enum": ["OPEN", "CLOSE"], "example": "OPEN", "description": "Hành động điều khiển" },
+          "method": { "type": "string", "example": "Điều khiển qua Web / App", "description": "Phương thức người dùng kích hoạt" }
+        }
+      },
+      "LightControlRequest": {
+        "type": "object",
+        "required": ["light"],
+        "properties": {
+          "light": { "type": "boolean", "example": true, "description": "true: Bật đèn chiếu sáng, false: Tắt đèn" },
+          "on": { "type": "boolean", "example": true, "description": "Thuộc tính đồng bộ phụ (tùy chọn)" }
+        }
+      }
+    }
+  }
+}
