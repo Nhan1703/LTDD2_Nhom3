@@ -135,7 +135,7 @@ export default function DashboardScreen({ navigation, onNavigateTab }) {
                 styles.smartTile,
                 gateState.isOpen ? styles.tileActiveGate : styles.tileNormal,
               ]}
-              onPress={toggleGate}
+              onPress={() => toggleGate('Điều khiển từ Bảng điều khiển')}
               activeOpacity={0.8}
             >
               <View style={styles.tileTopRow}>

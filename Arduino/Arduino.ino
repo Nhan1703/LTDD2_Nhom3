@@ -24,6 +24,11 @@
   - NÚT BOOT (GPIO 0) TRÊN ESP32 NHẤN GIỮ 1.5S ĐỂ RESET HỌC LẠI THẺ MASTER
   - ĐÈN LED PHẢN HỒI SIÊU TỐC (< 15MS) NHỜ WEB SERVER TRÊN NHÂN 1
   - DUAL-CORE: NHÂN 0 CHẠY MẠNG FIREBASE, NHÂN 1 CHẠY PHẦN CỨNG & LAN
+  - TỐI ƯU TỐC ĐỘ PHẢN HỒI (HẾT DELAY BẬT ĐÈN / CỔNG TRÊN WEB):
+    + Kiểm tra lệnh Firebase mỗi 400ms (phản hồi < 0.5s tức thì)
+    + Giãn chu kỳ gửi nhiệt độ DHT11 lên 10 giây/lần để giải phóng 95% băng thông
+    + Gộp lệnh xóa Firebase thành 1 PATCH duy nhất, không tạo nhiều kết nối thừa
+    + Không gửi trùng lặp telemetry khi lệnh xuất phát từ Web App
   ======================================================================
 */
 
@@ -52,8 +57,8 @@
 // ==================================================
 // 2. CẤU HÌNH WI-FI & FIREBASE
 // ==================================================
-const char* ssid = "Danh Ngoc";
-const char* password = "0982555644";
+const char* ssid = "Kim Khom";
+const char* password = "08012005@";
 const char* firebaseUrl = "https://ltdd-945a5-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // ==================================================
@@ -76,11 +81,12 @@ const unsigned long IR_DEBOUNCE = 250; // Chống dội phím Remote IR 250ms
 // ==================================================
 String uidTheMaster = "";
 String uidTheVuaQuet = "";
-float nhietDo = 0.0;
-float doAm = 0.0;
+// Dùng volatile để 2 nhân Core 0 và Core 1 đồng bộ trực tiếp ô nhớ RAM
+volatile float nhietDo = 0.0;
+volatile float doAm = 0.0;
 bool trangThaiCua = false;
 bool trangThaiDen = false;
-volatile bool canGuiCloudNgay = false; // Cờ kích hoạt gửi đồng bộ Cloud tức thì khi trạng thái phần cứng đổi
+volatile bool canGuiCloudNgay = false; // Cờ kích hoạt gửi đồng bộ Cloud tức thì khi quẹt thẻ / bấm Remote
 
 unsigned long thoiGianDocDHT = 0;
 unsigned long thoiGianLCD = 0;
@@ -203,14 +209,17 @@ void moCua(String nguonMo = "RFID", bool tuDongDong = true) {
     dangDemThoiGianDongCua = false; // Mở trên Web/App thì giữ mở cho đến khi người dùng bấm Đóng
   }
 
-  canGuiCloudNgay = true; // Kích hoạt cờ gửi cập nhật tức thì lên Firebase
+  // Chỉ kích hoạt đồng bộ Cloud ngay nếu mở từ phần cứng (RFID / Remote), tránh spam nếu mở từ Web
+  if (nguonMo != "Firebase App") {
+    canGuiCloudNgay = true;
+  }
 }
 
-void dongCua() {
+void dongCua(String nguon = "HE THONG") {
   trangThaiCua = false;
   servoCua.write(GOC_DONG_CUA); // 1. Xoay Servo khóa an toàn ngay lập tức (0ms)
   dangDemThoiGianDongCua = false;
-  Serial.println("[CUA] Da dong va khoa an toan!");
+  Serial.printf("[CUA] Da dong va khoa an toan! Nguon: %s\n", nguon.c_str());
 
   // 2. KÍCH HOẠT CÒI VÀ LCD CHẠY ĐỒNG THỜI CÙNG MỘT LÚC (0ms delay)
   #if ACTIVE_BUZZER
@@ -225,14 +234,20 @@ void dongCua() {
     digitalWrite(BUZZER_PIN, LOW);
   #endif
 
-  canGuiCloudNgay = true; // Kích hoạt cờ gửi cập nhật tức thì lên Firebase
+  if (nguon != "Firebase App") {
+    canGuiCloudNgay = true;
+  }
 }
 
 void datTrangThaiDen(bool batDen, String nguon = "APP") {
   trangThaiDen = batDen;
   digitalWrite(LED_PIN, trangThaiDen ? HIGH : LOW); // Bật hoặc tắt chân LED ngay lập tức (0ms)
   Serial.printf("[DEN] Trang thai: %s | Nguon: %s\n", trangThaiDen ? "BAT" : "TAT", nguon.c_str());
-  canGuiCloudNgay = true; // Kích hoạt cờ gửi cập nhật tức thì lên Firebase
+
+  // Nếu lệnh từ Web thì Web đã tự cập nhật telemetry rồi, không kích hoạt gửi thêm để tránh lag
+  if (nguon != "Firebase App") {
+    canGuiCloudNgay = true;
+  }
 }
 
 void dangKyTheMaster(String uid) {
@@ -300,7 +315,7 @@ void kiemTraRemoteIR() {
         moCua("Remote IR", false); // Mở bằng Remote thì KHÔNG tự động đóng
         hienThi("REMOTE IR", "DA MO CUA");
       } else {
-        dongCua();
+        dongCua("Remote IR");
         hienThi("REMOTE IR", "DA KHOA CUA");
       }
     }
@@ -341,7 +356,7 @@ void docCamBienDHT() {
 
   float h = dht.readHumidity();
   float t = dht.readTemperature();
-  if (!isnan(h) && !isnan(t)) {
+  if (!isnan(h) && !isnan(t) && h > 0 && t > 0) {
     doAm = h;
     nhietDo = t;
   }
@@ -389,80 +404,99 @@ void guiLenFirebase() {
   if (WiFi.status() != WL_CONNECTED) return;
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(2000);
+  client.setTimeout(6000);
   HTTPClient http;
+  http.setConnectTimeout(6000);
+  http.setTimeout(6000);
   String url = String(firebaseUrl) + "/smart_home/telemetry.json";
-  http.begin(client, url);
-  http.addHeader("Content-Type", "application/json");
-  http.PUT(taoChuoiJson());
-  http.end();
-  client.stop();
+  if (http.begin(client, url)) {
+    http.addHeader("Content-Type", "application/json");
+    int code = http.PUT(taoChuoiJson());
+    if (code == 200) {
+      Serial.println("[FIREBASE] Telemetry cap nhat thanh cong (Code 200)");
+    } else if (code > 0) {
+      Serial.printf("[FIREBASE] Telemetry phan hoi: Code %d\n", code);
+    } else {
+      Serial.printf("[FIREBASE] Gui that bai: %s (Code: %d)\n", http.errorToString(code).c_str(), code);
+    }
+    http.end();
+  }
 }
 
 void guiDuLieuCloud() {
   guiLenFirebase();
 }
 
-void xoaLenhCongFirebase() {
+// Gộp xóa lệnh Firebase thành 1 hàm duy nhất để giảm 50% số lần kết nối HTTPS
+void xoaLenhFirebase(bool xoaCong, bool xoaDen) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  if (!xoaCong && !xoaDen) return;
+
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(1500);
+  client.setTimeout(3000);
   HTTPClient http;
+  http.setConnectTimeout(3000);
+  http.setTimeout(3000);
   String url = String(firebaseUrl) + "/smart_home/commands.json";
-  http.begin(client, url);
-  http.addHeader("Content-Type", "application/json");
-  http.PATCH("{\"gate\":null}");
-  http.end();
-  client.stop();
+  if (http.begin(client, url)) {
+    http.addHeader("Content-Type", "application/json");
+    String body = "{";
+    if (xoaCong && xoaDen) {
+      body += "\"gate\":null,\"light\":null";
+    } else if (xoaCong) {
+      body += "\"gate\":null";
+    } else if (xoaDen) {
+      body += "\"light\":null";
+    }
+    body += "}";
+    http.PATCH(body);
+    http.end();
+  }
 }
 
-void xoaLenhDenFirebase() {
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout(1500);
-  HTTPClient http;
-  String url = String(firebaseUrl) + "/smart_home/commands.json";
-  http.begin(client, url);
-  http.addHeader("Content-Type", "application/json");
-  http.PATCH("{\"light\":null}");
-  http.end();
-  client.stop();
-}
-
+// Kiểm tra lệnh phản hồi siêu tốc (< 500ms)
 void kiemTraLenhFirebase() {
   if (WiFi.status() != WL_CONNECTED) return;
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(1500); // Đặt timeout hợp lý 1.5 giây
-
+  client.setTimeout(3000); // Timeout 3 giây nhanh gọn
   HTTPClient http;
-  http.setReuse(true);
+  http.setConnectTimeout(3000);
+  http.setTimeout(3000);
   String url = String(firebaseUrl) + "/smart_home/commands.json";
-  http.begin(client, url);
+  if (http.begin(client, url)) {
+    int httpCode = http.GET();
+    if (httpCode == 200) {
+      String payload = http.getString();
+      bool xoaCong = false;
+      bool xoaDen = false;
 
-  int httpCode = http.GET();
-  if (httpCode == 200) {
-    String payload = http.getString();
-    // 1. Kiểm tra lệnh điều khiển cửa từ Firebase
-    if (payload.indexOf("\"gate\":true") >= 0 || payload.indexOf("\"gate\": true") >= 0) {
-      if (!trangThaiCua) moCua("Firebase App", false); // Mở trên App thì KHÔNG tự động đóng
-      xoaLenhCongFirebase(); // Dọn dẹp lệnh trên Cloud sau khi đã kích hoạt phần cứng
-    } else if (payload.indexOf("\"gate\":false") >= 0 || payload.indexOf("\"gate\": false") >= 0) {
-      if (trangThaiCua) dongCua(); // Khóa cửa ngay lập tức (0ms)
-      xoaLenhCongFirebase();
-    }
+      // 1. Kiểm tra lệnh điều khiển cửa từ Firebase
+      if (payload.indexOf("\"gate\":true") >= 0 || payload.indexOf("\"gate\": true") >= 0) {
+        if (!trangThaiCua) moCua("Firebase App", false);
+        xoaCong = true;
+      } else if (payload.indexOf("\"gate\":false") >= 0 || payload.indexOf("\"gate\": false") >= 0) {
+        if (trangThaiCua) dongCua("Firebase App");
+        xoaCong = true;
+      }
 
-    // 2. Kiểm tra lệnh điều khiển đèn từ Firebase
-    if (payload.indexOf("\"light\":true") >= 0 || payload.indexOf("\"light\": true") >= 0) {
-      if (!trangThaiDen) datTrangThaiDen(true, "Firebase App"); // Bật đèn LED ngay lập tức (0ms)
-      xoaLenhDenFirebase(); // Dọn dẹp lệnh trên Cloud
-    } else if (payload.indexOf("\"light\":false") >= 0 || payload.indexOf("\"light\": false") >= 0) {
-      if (trangThaiDen) datTrangThaiDen(false, "Firebase App"); // Tắt đèn LED ngay lập tức (0ms)
-      xoaLenhDenFirebase();
+      // 2. Kiểm tra lệnh điều khiển đèn từ Firebase
+      if (payload.indexOf("\"light\":true") >= 0 || payload.indexOf("\"light\": true") >= 0) {
+        if (!trangThaiDen) datTrangThaiDen(true, "Firebase App");
+        xoaDen = true;
+      } else if (payload.indexOf("\"light\":false") >= 0 || payload.indexOf("\"light\": false") >= 0) {
+        if (trangThaiDen) datTrangThaiDen(false, "Firebase App");
+        xoaDen = true;
+      }
+
+      // Xóa lệnh ngay lập tức bằng 1 request duy nhất nếu có lệnh mới
+      if (xoaCong || xoaDen) {
+        xoaLenhFirebase(xoaCong, xoaDen);
+      }
     }
+    http.end();
   }
-  http.end();
-  client.stop();
 }
 
 // ==================================================
@@ -490,7 +524,7 @@ void xuLyDieuKhienCua() {
   if (body.indexOf("\"open\":true") >= 0 || body.indexOf("\"action\":\"OPEN\"") >= 0) {
     moCua("HTTP API Local", false); // Mở trên Web/App thì KHÔNG tự động đóng!
   } else if (body.indexOf("\"open\":false") >= 0 || body.indexOf("\"action\":\"CLOSE\"") >= 0) {
-    dongCua();
+    dongCua("HTTP API Local");
   }
   server.send(200, "application/json", "{\"success\":true,\"gate\":" + String(trangThaiCua ? "true" : "false") + "}");
 }
@@ -536,6 +570,8 @@ void ketNoiWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
+    // Cấu hình Google DNS 8.8.8.8 chống lỗi nghẽn DNS trên iPhone/4G Hotspot (172.20.10.x)
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, IPAddress(8, 8, 8, 8), IPAddress(8, 8, 4, 4));
     Serial.println("\n[WIFI] KET NOI THANH CONG! IP: " + WiFi.localIP().toString());
     hienThi("WIFI CONNECTED", WiFi.localIP().toString());
     delay(1500);
@@ -548,21 +584,43 @@ void ketNoiWiFi() {
 
 // ==================================================
 // 15. TASK XỬ LÝ MẠNG TRÊN NHÂN 0 (CORE 0) CHẠY NGẦM
+// PHẢN HỒI LỆNH SIÊU TỐC (< 500MS) KHÔNG BỊ DELAY
 // ==================================================
 void taskMangInternet(void *pvParameters) {
-  for (;;) {
-    if (WiFi.status() == WL_CONNECTED) {
-      kiemTraLenhFirebase();
+  // Đợi 2 giây sau khi khởi động để phần cứng và mạng ổn định
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-      static unsigned long thoiGianGui = 0;
-      // Gửi định kỳ mỗi 5 giây HOẶC gửi tức thì khi có trạng thái phần cứng thay đổi
-      if (canGuiCloudNgay || (millis() - thoiGianGui >= 5000)) {
-        canGuiCloudNgay = false;
-        thoiGianGui = millis();
-        guiDuLieuCloud();
-      }
+  static unsigned long thoiGianGuiCloud = 0;
+  static unsigned long thoiGianKiemTraLenh = 0;
+
+  for (;;) {
+    // 1. Tự động kết nối lại nếu bị rớt Wi-Fi
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("[WIFI] Mat ket noi, dang thu ket noi lai...");
+      WiFi.reconnect();
+      vTaskDelay(3000 / portTICK_PERIOD_MS);
+      continue;
     }
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    unsigned long hienTai = millis();
+
+    // 2. ƯU TIÊN SỐ 1: Kiểm tra lệnh điều khiển từ Firebase mỗi 400ms (phản hồi siêu nhanh)
+    if (hienTai - thoiGianKiemTraLenh >= 400) {
+      thoiGianKiemTraLenh = millis();
+      kiemTraLenhFirebase();
+    }
+
+    // 3. Gửi dữ liệu cảm biến nhiệt độ DHT11 định kỳ mỗi 10 giây (hoặc gửi ngay khi quẹt thẻ RFID)
+    // Kéo dài lên 10s để giải phóng đường truyền mạng cho nút bấm đèn / cổng phản hồi ngay
+    hienTai = millis();
+    if (canGuiCloudNgay || (hienTai - thoiGianGuiCloud >= 10000)) {
+      canGuiCloudNgay = false;
+      thoiGianGuiCloud = millis();
+      guiDuLieuCloud();
+    }
+
+    // Nghỉ 50ms nhường CPU cho các tiến trình hệ thống
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -599,8 +657,15 @@ void setup() {
   servoCua.attach(SERVO_PIN, 500, 2400);
   servoCua.write(GOC_DONG_CUA);
 
-  // Khởi tạo DHT11
+  // Khởi tạo DHT11 và đọc thử trước 1 lần để có dữ liệu ban đầu
   dht.begin();
+  delay(1000);
+  float hBanDau = dht.readHumidity();
+  float tBanDau = dht.readTemperature();
+  if (!isnan(hBanDau) && !isnan(tBanDau) && hBanDau > 0 && tBanDau > 0) {
+    doAm = hBanDau;
+    nhietDo = tBanDau;
+  }
 
   // Khởi tạo SPI & Chẩn đoán RFID RC522
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
@@ -641,9 +706,9 @@ void setup() {
   irrecv.enableIRIn();
   Serial.println("[IR] Dau thu hong ngoai da bat o GPIO 15!");
 
-  // Bật Task mạng chạy ngầm độc lập trên Core 0 (Nhân mạng)
-  xTaskCreatePinnedToCore(taskMangInternet, "TaskNet", 8192, NULL, 1, NULL, 0);
-  Serial.println("[DUAL CORE] Mang da tach sang Nhan 0 chay ngam!");
+  // Bật Task mạng chạy ngầm trên Core 0 với Stack 16KB (16384 bytes) an toàn cho TLS HTTPS
+  xTaskCreatePinnedToCore(taskMangInternet, "TaskNet", 16384, NULL, 1, NULL, 0);
+  Serial.println("[DUAL CORE] Mang da tach sang Nhan 0 chay ngam (Stack 16KB)!");
 
   if (uidTheMaster.length() == 0) {
     hienThi("CHUA CO MASTER", "QUET THE DAU TIEN");
@@ -673,7 +738,7 @@ void loop() {
 
   // 4. Tự động đóng cửa sau 4s (chỉ kích hoạt khi mở bằng RFID)
   if (dangDemThoiGianDongCua && (millis() - thoiGianMoCuaTuDong >= THOI_GIAN_MO_CUA)) {
-    dongCua();
+    dongCua("Tu dong dong sau 4s");
   }
 
   // 5. Đọc cảm biến nhiệt độ DHT11

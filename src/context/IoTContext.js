@@ -72,6 +72,13 @@ export const IoTProvider = ({ children }) => {
 
       const savedGate = await StorageService.getGateState();
       if (savedGate) {
+        // Làm sạch dữ liệu lịch sử cũ nếu có log.method bị lưu nhầm object sự kiện từ React Native
+        if (savedGate.logs && Array.isArray(savedGate.logs)) {
+          savedGate.logs = savedGate.logs.map(log => ({
+            ...log,
+            method: typeof log.method === 'string' ? log.method : 'Điều khiển qua App / Web',
+          }));
+        }
         setGateState(savedGate);
       }
       const savedAlerts = await StorageService.getAlerts();
@@ -392,6 +399,11 @@ export const IoTProvider = ({ children }) => {
     if (now - lastGateToggleTimeRef.current < 700) {
       return;
     }
+    // Đảm bảo method luôn là chuỗi string, chống lỗi khi onPress truyền React Native SyntheticEvent object
+    const safeMethod = typeof method === 'string' && method.trim().length > 0
+      ? method
+      : 'Điều khiển qua Web / App';
+
     // Đánh dấu mốc thời gian người dùng vừa bấm nút để kích hoạt khóa chống giật 4.5 giây
     lastGateToggleTimeRef.current = now;
     const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -400,7 +412,7 @@ export const IoTProvider = ({ children }) => {
     const newLog = {
       id: `log_${Date.now()}`,
       action: willBeOpen ? 'Mở cổng' : 'Đóng cổng',
-      method: method,
+      method: safeMethod,
       time: nowStr,
       date: 'Hôm nay',
       status: 'success',
@@ -517,7 +529,7 @@ export const IoTProvider = ({ children }) => {
           body: JSON.stringify({
             open: willBeOpen,
             action: willBeOpen ? 'OPEN' : 'CLOSE',
-            method,
+            method: safeMethod,
           }),
           signal: controller.signal,
         })
@@ -530,7 +542,7 @@ export const IoTProvider = ({ children }) => {
     const newAlert = {
       id: `alert_gate_${Date.now()}`,
       title: willBeOpen ? 'Cổng đã mở' : 'Cổng đã khóa an toàn',
-      message: `Cổng ra vào được ${willBeOpen ? 'mở' : 'đóng'} bởi: ${method}`,
+      message: `Cổng ra vào được ${willBeOpen ? 'mở' : 'đóng'} bởi: ${safeMethod}`,
       type: 'info', // Mở/đóng cổng hợp lệ là INFO (thông tin vận hành), không phải cảnh báo nguy hiểm
       time: nowStr,
       date: 'Vừa xong',

@@ -398,7 +398,7 @@ export default function GateScreen() {
                   />
                   <View style={styles.logDetails}>
                     <Text style={styles.logAction}>{log.action}</Text>
-                    <Text style={styles.logMethod}>{log.method}</Text>
+                    <Text style={styles.logMethod}>{typeof log.method === 'string' ? log.method : 'Điều khiển qua App / Web'}</Text>
                   </View>
                   <View style={styles.logTimeCol}>
                     <Text style={styles.logTime}>{log.time}</Text>
